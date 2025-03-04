@@ -5,7 +5,7 @@
 
         <!-- Main Content -->
         <main class="content">
-            <h1 class="title">{{ roomTitle }}</h1>
+            <h1 class="title">{{ this.room }}</h1>
             <button @click="openModal" class="add-device-btn">เพิ่มอุปกรณ์ +</button>
 
             <!-- Modal เพิ่มอุปกรณ์ -->
@@ -28,12 +28,8 @@
 
             <!-- แสดงรายการอุปกรณ์ -->
             <div class="device-list">
-                <DeviceCard 
-                    v-for="device in devices" 
-                    :key="device.id" 
-                    :device="device" 
-                    @deleteDevice="openDeleteModal"
-                />
+                <DeviceCard v-for="device in devices" :key="device._id" :device="device" @toggle-device="toggleDevice"
+                    @delete-device="confirmDelete" />
             </div>
 
             <!-- Modal ยืนยันการลบ -->
@@ -59,6 +55,7 @@
 <script>
 import Sidebar from "./SidebarMenu.vue";
 import DeviceCard from "./DeviceCard.vue";
+import axios from "axios";
 
 export default {
     name: "RoomName",
@@ -69,31 +66,27 @@ export default {
     data() {
         return {
             showModal: false,
-            showDeleteModal: false, 
+            showDeleteModal: false,
             selectedDevice: null,
-            deviceName: "",
-            power: "",
-            voltage: "",
-            devices: [
-                { id: 1, name: "หลอดไฟ1", power: 10, usageTime: 2, isOn: true },
-                { id: 2, name: "ทีวี", power: 100, usageTime: 5, isOn: false },
-                { id: 3, name: "พัดลม", power: 50, usageTime: 3, isOn: false },
-            ],
+            userid: localStorage.getItem("userid"),
+            room: this.$route.params.room, // ดึง room จาก URL
+            devices: [],
         };
     },
     computed: {
-        roomTitle() {
-            const roomMap = {
-                "living-room": "ห้องนั่งเล่น",
-                bedroom: "ห้องนอน",
-                kitchen: "ห้องครัว",
-                bathroom: "ห้องอาบน้ำ",
-            };
-            return roomMap[this.$route.params.room] || "ห้องไม่พบ";
-        },
         isValidInput() {
             return this.deviceName.trim() !== "" && this.power > 0 && this.usageTime > 0;
-        }
+        },
+    },
+    watch: {
+        '$route.params.room': {
+            immediate: true, // เรียกทันทีเมื่อ component ถูกสร้าง
+            handler(newRoom) {
+                this.room = newRoom;
+                this.devices = []; // เคลียร์ devices array
+                this.fetchEnergy(); // ดึงข้อมูลอุปกรณ์ใหม่
+            },
+        },
     },
     methods: {
         openModal() {
@@ -111,30 +104,70 @@ export default {
             this.showDeleteModal = false;
             this.selectedDevice = null;
         },
-        confirmDelete() {
-            if (this.selectedDevice) {
-                this.devices = this.devices.filter(device => device.id !== this.selectedDevice.id);
-                this.closeDeleteModal();
-            }
-        },
-        addDevice() {
+        async addDevice() {
             if (this.isValidInput) {
-                this.devices.push({
-                    id: Date.now(),
-                    name: this.deviceName,
-                    power: parseFloat(this.power),
-                    usageTime: parseFloat(this.usageTime),
-                    isOn: false
-                });
-                this.closeModal();
+                try {
+                    const response = await axios.post('http://localhost:5000/api/devices', {
+                        room: this.room,
+                        devicename: this.deviceName,
+                        power: parseFloat(this.power),
+                        status: 'off', // เริ่มต้นด้วยสถานะปิด
+                        userid: this.userid,
+                    });
+                    this.devices.push(response.data); // เพิ่มอุปกรณ์ใหม่เข้าไปในรายการ
+                    this.closeModal();
+                } catch (error) {
+                    console.error('Failed to add device:', error.response?.data || error.message);
+                }
             }
         },
         resetForm() {
             this.deviceName = "";
             this.power = "";
-            this.usageTime = "";
-        }
+            // this.usageTime = "";
+        },
+        async fetchEnergy() {
+            console.log(this.room);
+            console.log(this.userid);
+            if (!this.userid) {
+                console.error('User ID is missing');
+                return;
+            }
+            try {
+                const response = await axios.get(`http://localhost:5000/api/energy/${this.room}/${this.userid}`);
+                this.devices = response.data; // อัปเดตข้อมูลอุปกรณ์
+                console.log(this.devices);
+            } catch (error) {
+                console.error('Failed to fetch energy from smartplug:', error.response?.data || error.message);
+            }
+        },
+        deleteDevice(deviceId) {
+            if (confirm("คุณต้องการลบอุปกรณ์นี้ใช่หรือไม่?")) {
+                this.$store.commit("removeDevice", deviceId);
+            }
+        },
+        async toggleDevice(deviceId) {
+            try {
+                const device = this.devices.find(device => device._id === deviceId);
+                const newStatus = device.status === 'on' ? 'off' : 'on';
+                await axios.put(`http://localhost:5000/api/devices/${deviceId}`, { status: newStatus });
+                device.status = newStatus; // อัปเดตสถานะใน local state
+            } catch (error) {
+                console.error('Failed to toggle device:', error.response?.data || error.message);
+            }
+        },
+        async confirmDelete(deviceId) {
+            try {
+                await axios.delete(`http://localhost:5000/api/devices/${deviceId}`);
+                this.devices = this.devices.filter(device => device._id !== deviceId);
+            } catch (error) {
+                console.error('Failed to delete device:', error.response?.data || error.message);
+            }
+        },
     },
+    mounted() {
+        this.fetchEnergy();
+    }
 };
 </script>
 
@@ -182,10 +215,12 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    padding: 10px;
 }
 
 /* Popup Overlay */
-.modal-overlay, .modal-del {
+.modal-overlay,
+.modal-del {
     position: fixed;
     top: 0;
     left: 0;
@@ -198,7 +233,8 @@ h1 {
 }
 
 /* Popup */
-.modal, .modal-content-del {
+.modal,
+.modal-content-del {
     background: white;
     padding: 20px;
     border-radius: 10px;
@@ -206,14 +242,16 @@ h1 {
 }
 
 /* Header */
-.modal-header, .modal-header-del {
+.modal-header,
+.modal-header-del {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
 /* ปุ่มปิด */
-.close-btn, .close-btn-del {
+.close-btn,
+.close-btn-del {
     background: none;
     border: none;
     font-size: 20px;
@@ -231,7 +269,8 @@ h1 {
 }
 
 /* ปุ่มยืนยัน */
-.confirm-btn, .confirm-btn-del {
+.confirm-btn,
+.confirm-btn-del {
     background: #0057d9;
     color: white;
     padding: 10px;
