@@ -134,7 +134,7 @@ export default {
                 return;
             }
             try {
-                const response = await axios.get(`http://localhost:5000/api/energy/${this.room}/${this.userid}`);
+                const response = await axios.get(`http://localhost:5000/api/energy`);
                 this.devices = response.data; // อัปเดตข้อมูลอุปกรณ์
                 console.log(this.devices);
             } catch (error) {
