@@ -1,2 +1,29 @@
+<<<<<<< HEAD
 # Project_SmartHome
 โปรเจคsmarthome vue,express,mongodb
+=======
+# vue-smarthome-project
+
+## Project setup
+```
+npm install
+```
+
+### Compiles and hot-reloads for development
+```
+npm run serve
+```
+
+### Compiles and minifies for production
+```
+npm run build
+```
+
+### Lints and fixes files
+```
+npm run lint
+```
+
+### Customize configuration
+See [Configuration Reference](https://cli.vuejs.org/config/).
+>>>>>>> ac48e6b (First Commit)
