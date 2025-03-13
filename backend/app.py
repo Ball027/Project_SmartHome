@@ -34,11 +34,13 @@ async def get_energy_data(plugname, email, password, ip_address):
     except Exception as e:
         return {"ip_address": ip_address, "error": str(e)}
 
-@app.route('/api/energy', methods=['GET'])
-def energy():
+@app.route('/api/energy/<room>/<userid>', methods=['GET'])
+def energy(room, userid):
     try:
+        print(f"Received room: {room}, userid: {userid}")  # แสดงค่า room และ userid
+
         # ดึงข้อมูล Smart Plugs จาก MongoDB
-        smart_plugs = list(collection.find({}, {"_id": 0, "smartplugname": 1, "email": 1, "password": 1, "ipAddress": 1}))
+        smart_plugs = list(collection.find({"room": room, "userid": userid}, {"_id": 0, "email": 1, "password": 1, "ipAddress": 1}))
 
         if not smart_plugs:
             return jsonify({"message": "No smart plugs found in database"}), 404
