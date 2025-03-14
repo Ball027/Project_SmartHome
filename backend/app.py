@@ -4,6 +4,7 @@ from tapo.requests import EnergyDataInterval
 import asyncio
 from datetime import datetime
 from pymongo import MongoClient
+from bson import ObjectId
 
 app = Flask(__name__)
 
@@ -38,9 +39,9 @@ async def get_energy_data(plugname, email, password, ip_address):
 def energy(room, userid):
     try:
         print(f"Received room: {room}, userid: {userid}")  # แสดงค่า room และ userid
-
+        object_userid = ObjectId(userid)
         # ดึงข้อมูล Smart Plugs จาก MongoDB
-        smart_plugs = list(collection.find({"room": room, "userid": userid}, {"_id": 0, "email": 1, "password": 1, "ipAddress": 1}))
+        smart_plugs = list(collection.find({"room": room, "userid": object_userid}, {"_id": 0, "smartplugname": 1, "email": 1, "password": 1, "ipAddress": 1}))
 
         if not smart_plugs:
             return jsonify({"message": "No smart plugs found in database"}), 404
