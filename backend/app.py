@@ -24,16 +24,30 @@ async def get_energy_data(plugname, email, password, ip_address):
         energy_usage = await device.get_energy_usage()
         today = datetime.today()
         energy_data_hourly = await device.get_energy_data(EnergyDataInterval.Hourly, today)
+        today_energy = energy_usage.to_dict().get("today_energy", 0)
+        today_runtime = energy_usage.to_dict().get("today_runtime", 0)
 
         return {
             "plugname": plugname,
             "ip_address": ip_address,
             "current_power": current_power.to_dict().get("current_power", 0),  # พลังงานปัจจุบัน วัตต์ (W)
-            "today_energy": energy_usage.to_dict().get("today_energy", 0),  # พลังงานที่ใช้วันนี้ วัตต์-ชั่วโมง (Wh)
-            "today_runtime": energy_usage.to_dict().get("today_runtime", 0),  # เวลาที่ใช้วันนี้ นาที
+            "today_energy": today_energy,  # พลังงานที่ใช้วันนี้ วัตต์-ชั่วโมง (Wh)
+            "today_runtime": today_runtime,  # เวลาที่ใช้วันนี้ นาที
+            "total_energy_month": energy_usage.to_dict().get("month_energy", 0),
+            "total_runtime_month": energy_usage.to_dict().get("month_runtime", 0)
         }
     except Exception as e:
-        return {"ip_address": ip_address, "error": str(e)}
+        print(f"Failed to fetch data from Smartplug(OFF): {e}")
+        # หากดึงข้อมูลไม่สำเร็จ (อุปกรณ์ปิดอยู่หรือไม่สามารถเชื่อมต่อได้)
+        return {
+            "plugname": plugname,
+            "ip_address": ip_address,
+            "current_power": 0,  # กำหนดค่าเป็น 0
+            "today_energy": 0,  # กำหนดค่าเป็น 0
+            "today_runtime": 0,  # กำหนดค่าเป็น 0
+            "total_energy_month": 0,  # กำหนดค่าเป็น 0
+            "total_runtime_month": 0  # กำหนดค่าเป็น 0
+        }
 
 @app.route('/api/energy/<room>/<userid>', methods=['GET'])
 def energy(room, userid):
