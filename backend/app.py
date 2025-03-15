@@ -66,6 +66,7 @@ def energy(room, userid):
         results = []
         for plug in smart_plugs:
             plugname = plug.get("smartplugname")
+            _id = plug.get("_id")
             email = plug.get("email")
             password = plug.get("password")
             ip_address = plug.get("ipAddress")
