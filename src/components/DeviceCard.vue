@@ -42,8 +42,30 @@ export default {
     };
   },
   methods: {
-    toggleDevice() {
-      this.$emit('toggle-device', this.device._id); // ส่ง event ไปยัง Room.vue
+    async toggleDevice() {
+        try {
+            // สถานะใหม่ (สลับระหว่าง on/off)
+            const newStatus = this.deviceStatus ? "on" : "off";
+            console.log("Device_id:",this.device._id)
+            // เรียก API เพื่อควบคุม Tapo P110
+            const response = await fetch(`http://localhost:5000/api/smartplug/${this.device._id}/${newStatus}`, {
+                method: "PUT",
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to control device");
+            }
+
+            // อัปเดตสถานะใน local state
+            this.deviceStatus = !this.deviceStatus;
+
+            // ส่ง event ไปยัง parent component (Room.vue)
+            this.$emit('toggle-device', this.device._id);
+        } catch (error) {
+            console.error("Failed to toggle device:", error);
+            // ยกเลิกการเปลี่ยนสถานะสวิชหากเกิดข้อผิดพลาด
+            this.deviceStatus = !this.deviceStatus;
+        }
     },
     removeDevice() {
       this.showModal = true; // แสดง modal ยืนยันการลบ
@@ -52,18 +74,7 @@ export default {
       this.$emit('delete-device', this.device._id); // ส่ง event ไปยัง Room.vue
       this.showModal = false; // ปิด modal
     },
-    // async fetchEnergyData() {
-    //   try {
-    //     const response = await axios.get('http://localhost:5000/api/energy');
-    //     this.energyData = response.data;
-    //   } catch (error) {
-    //     console.error('Failed to fetch energy data:', error.response?.data || error.message);
-    //   }
-    // },
   },
-  // mounted() {
-  //   this.fetchEnergyData(); // ดึงข้อมูลพลังงานเมื่อ component ถูกสร้าง
-  // },
 };
 </script>
 

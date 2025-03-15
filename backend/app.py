@@ -14,7 +14,7 @@ client = MongoClient(mongo_uri)
 db = client["SmartHome"]  # ชื่อ database
 collection = db["SmartPlugs"]  # ชื่อ collection
 
-async def get_energy_data(plugname, email, password, ip_address):
+async def get_energy_data(plugname, email, password, ip_address,_id):
     try:
         client = ApiClient(email, password)
         device = await client.p110(ip_address)
@@ -29,6 +29,7 @@ async def get_energy_data(plugname, email, password, ip_address):
 
         return {
             "plugname": plugname,
+            "_id": _id,
             "ip_address": ip_address,
             "current_power": current_power.to_dict().get("current_power", 0),  # พลังงานปัจจุบัน วัตต์ (W)
             "today_energy": today_energy,  # พลังงานที่ใช้วันนี้ วัตต์-ชั่วโมง (Wh)
@@ -41,6 +42,7 @@ async def get_energy_data(plugname, email, password, ip_address):
         # หากดึงข้อมูลไม่สำเร็จ (อุปกรณ์ปิดอยู่หรือไม่สามารถเชื่อมต่อได้)
         return {
             "plugname": plugname,
+            "_id": _id,
             "ip_address": ip_address,
             "current_power": 0,  # กำหนดค่าเป็น 0
             "today_energy": 0,  # กำหนดค่าเป็น 0
@@ -55,7 +57,7 @@ def energy(room, userid):
         print(f"Received room: {room}, userid: {userid}")  # แสดงค่า room และ userid
         object_userid = ObjectId(userid)
         # ดึงข้อมูล Smart Plugs จาก MongoDB
-        smart_plugs = list(collection.find({"room": room, "userid": object_userid}, {"_id": 0, "smartplugname": 1, "email": 1, "password": 1, "ipAddress": 1}))
+        smart_plugs = list(collection.find({"room": room, "userid": object_userid}, {"_id": 1, "smartplugname": 1, "email": 1, "password": 1, "ipAddress": 1}))
 
         if not smart_plugs:
             return jsonify({"message": "No smart plugs found in database"}), 404
@@ -64,6 +66,7 @@ def energy(room, userid):
         results = []
         for plug in smart_plugs:
             plugname = plug.get("smartplugname")
+            _id = plug.get("_id")
             email = plug.get("email")
             password = plug.get("password")
             ip_address = plug.get("ipAddress")
@@ -72,12 +75,43 @@ def energy(room, userid):
                 results.append({"ip_address": ip_address, "error": "Missing credentials or IP address"})
                 continue
 
-            energy_data = asyncio.run(get_energy_data(plugname, email, password, ip_address))
+            energy_data = asyncio.run(get_energy_data(plugname, email, password, ip_address,_id))
             results.append(energy_data)
 
         return jsonify(results)
     except Exception as e:
         return jsonify({"message": "Failed to fetch energy data", "error": str(e)}), 500
+
+@app.route('/api/smartplug/<device_id>/<action>', methods=['PUT'])
+def control_tapo(device_id, action):
+    try:
+        # ค้นหาข้อมูล Smart Plug จาก MongoDB
+        device = collection.find_one({"_id": ObjectId(device_id)})
+        if not device:
+            return jsonify({"message": "Device not found"}), 404
+
+        email = device.get("email")
+        password = device.get("password")
+        ip_address = device.get("ipAddress")
+
+        if not email or not password or not ip_address:
+            return jsonify({"message": "Missing credentials or IP address"}), 400
+
+        # เชื่อมต่อกับ Tapo P110
+        client = ApiClient(email, password)
+        device = asyncio.run(client.p110(ip_address))
+
+        # ส่งคำสั่งเปิด/ปิด
+        if action == "on":
+            asyncio.run(device.turn_on())
+            return jsonify({"message": "Device turned on"})
+        elif action == "off":
+            asyncio.run(device.turn_off())
+            return jsonify({"message": "Device turned off"})
+        else:
+            return jsonify({"message": "Invalid action"}), 400
+    except Exception as e:
+        return jsonify({"message": "Failed to control device", "error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
