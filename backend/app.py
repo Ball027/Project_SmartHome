@@ -14,7 +14,7 @@ client = MongoClient(mongo_uri)
 db = client["SmartHome"]  # ชื่อ database
 collection = db["SmartPlugs"]  # ชื่อ collection
 
-async def get_energy_data(plugname, _id, email, password, ip_address):
+async def get_energy_data(plugname, email, password, ip_address):
     try:
         client = ApiClient(email, password)
         device = await client.p110(ip_address)
@@ -29,7 +29,7 @@ async def get_energy_data(plugname, _id, email, password, ip_address):
 
         return {
             "plugname": plugname,
-            "_id": _id,
+            # "_id": _id,
             "ip_address": ip_address,
             "current_power": current_power.to_dict().get("current_power", 0),  # พลังงานปัจจุบัน วัตต์ (W)
             "today_energy": today_energy,  # พลังงานที่ใช้วันนี้ วัตต์-ชั่วโมง (Wh)
@@ -42,7 +42,7 @@ async def get_energy_data(plugname, _id, email, password, ip_address):
         # หากดึงข้อมูลไม่สำเร็จ (อุปกรณ์ปิดอยู่หรือไม่สามารถเชื่อมต่อได้)
         return {
             "plugname": plugname,
-            "_id": _id,
+            # "_id": _id,
             "ip_address": ip_address,
             "current_power": 0,  # กำหนดค่าเป็น 0
             "today_energy": 0,  # กำหนดค่าเป็น 0
@@ -57,7 +57,7 @@ def energy(room, userid):
         print(f"Received room: {room}, userid: {userid}")  # แสดงค่า room และ userid
         object_userid = ObjectId(userid)
         # ดึงข้อมูล Smart Plugs จาก MongoDB
-        smart_plugs = list(collection.find({"room": room, "userid": object_userid}, {"_id": 1, "smartplugname": 1, "email": 1, "password": 1, "ipAddress": 1}))
+        smart_plugs = list(collection.find({"room": room, "userid": object_userid}, {"_id": 0, "smartplugname": 1, "email": 1, "password": 1, "ipAddress": 1}))
 
         if not smart_plugs:
             return jsonify({"message": "No smart plugs found in database"}), 404
@@ -66,7 +66,7 @@ def energy(room, userid):
         results = []
         for plug in smart_plugs:
             plugname = plug.get("smartplugname")
-            _id = plug.get("_id")
+            # _id = plug.get("_id")
             email = plug.get("email")
             password = plug.get("password")
             ip_address = plug.get("ipAddress")
@@ -75,7 +75,7 @@ def energy(room, userid):
                 results.append({"ip_address": ip_address, "error": "Missing credentials or IP address"})
                 continue
 
-            energy_data = asyncio.run(get_energy_data(plugname, _id, email, password, ip_address))
+            energy_data = asyncio.run(get_energy_data(plugname, email, password, ip_address))
             results.append(energy_data)
 
         return jsonify(results)
