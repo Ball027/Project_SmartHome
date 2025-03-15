@@ -28,8 +28,13 @@
 
       <!-- แสดงรายการอุปกรณ์ -->
       <div class="device-list">
-        <DeviceCard v-for="device in devices" :key="device._id" :device="device" @toggle-device="toggleDevice"
-          @delete-device="confirmDelete" />
+        <DeviceCard
+          v-for="device in devices"
+          :key="device._id"
+          :device="device"
+          @toggle-device="updateDeviceStatus"
+          @delete-device="confirmDelete"
+        />
       </div>
 
       <!-- Modal ยืนยันการลบ -->
@@ -43,7 +48,7 @@
             <p><b>{{ selectedDevice?.name || 'อุปกรณ์' }}</b></p>
           </div>
           <div class="modal-footer-del">
-            <button @click="confirmDelete" class="confirm-btn-del">ยืนยัน</button>
+            <button @click="deleteDevice" class="confirm-btn-del">ยืนยัน</button>
             <button @click="closeDeleteModal" class="cancel-btn-del">ยกเลิก</button>
           </div>
         </div>
@@ -61,7 +66,7 @@ export default {
   name: "RoomName",
   components: {
     Sidebar,
-    DeviceCard
+    DeviceCard,
   },
   data() {
     return {
@@ -71,15 +76,18 @@ export default {
       userid: localStorage.getItem("userid"),
       room: this.$route.params.room, // ดึง room จาก URL
       devices: [],
+      deviceName: "",
+      voltage: "",
+      power: "",
     };
   },
   computed: {
     isValidInput() {
-      return this.deviceName.trim() !== "" && this.power > 0 && this.usageTime > 0;
+      return this.deviceName.trim() !== "" && this.power > 0;
     },
   },
   watch: {
-    '$route.params.room': {
+    "$route.params.room": {
       immediate: true, // เรียกทันทีเมื่อ component ถูกสร้าง
       handler(newRoom) {
         this.room = newRoom;
@@ -96,104 +104,75 @@ export default {
       this.showModal = false;
       this.resetForm();
     },
-    openDeleteModal(device) {
-      this.selectedDevice = device;
+    resetForm() {
+      this.deviceName = "";
+      this.voltage = "";
+      this.power = "";
+    },
+    async addDevice() {
+      if (this.isValidInput) {
+        try {
+          const response = await axios.post("http://localhost:5000/api/devices", {
+            room: this.room,
+            devicename: this.deviceName,
+            power: parseFloat(this.power),
+            status: "off", // เริ่มต้นด้วยสถานะปิด
+            userid: this.userid,
+          });
+          this.devices.push(response.data); // เพิ่มอุปกรณ์ใหม่เข้าไปในรายการ
+          this.closeModal();
+        } catch (error) {
+          console.error("Failed to add device:", error.response?.data || error.message);
+        }
+      }
+    },
+    async fetchEnergy() {
+      try {
+        const response = await axios.get(
+          `http://localhost:5000/api/energy/${this.room}/${this.userid}`
+        );
+        this.devices = response.data; // อัปเดตข้อมูลอุปกรณ์
+      } catch (error) {
+        console.error("Failed to fetch energy data:", error.response?.data || error.message);
+      }
+    },
+    updateDeviceStatus(deviceId) {
+      // อัปเดตสถานะของอุปกรณ์ใน local state
+      const device = this.devices.find((device) => device._id === deviceId);
+      if (device) {
+        device.status = device.status === "on" ? "off" : "on";
+      }
+    },
+    confirmDelete(deviceId) {
+      this.selectedDevice = this.devices.find((device) => device._id === deviceId);
       this.showDeleteModal = true;
     },
     closeDeleteModal() {
       this.showDeleteModal = false;
       this.selectedDevice = null;
     },
-    async addDevice() {
-      if (this.isValidInput) {
-        try {
-          const response = await axios.post('http://localhost:5000/api/devices', {
-            room: this.room,
-            devicename: this.deviceName,
-            power: parseFloat(this.power),
-            status: 'off', // เริ่มต้นด้วยสถานะปิด
-            userid: this.userid,
-          });
-          this.devices.push(response.data); // เพิ่มอุปกรณ์ใหม่เข้าไปในรายการ
-          this.closeModal();
-        } catch (error) {
-          console.error('Failed to add device:', error.response?.data || error.message);
-        }
-      }
-    },
-    resetForm() {
-      this.deviceName = "";
-      this.power = "";
-    },
-    async fetchEnergy() {
-      console.log(this.room);
-      console.log(this.userid);
-      if (!this.userid) {
-        console.error('User ID is missing');
-        return;
-      }
+    async deleteDevice() {
       try {
-        const response = await axios.get(`http://localhost:5000/api/energy/${this.room}/${this.userid}`);
-        this.devices = response.data; // อัปเดตข้อมูลอุปกรณ์
-        console.log(this.devices);
+        await axios.delete(
+          `http://localhost:5000/api/devices/${this.selectedDevice._id}`
+        );
+        this.devices = this.devices.filter(
+          (device) => device._id !== this.selectedDevice._id
+        );
+        this.closeDeleteModal();
       } catch (error) {
-        console.error('Failed to fetch energy from smartplug:', error.response?.data || error.message);
-      }
-    },
-    deleteDevice(deviceId) {
-      if (confirm("คุณต้องการลบอุปกรณ์นี้ใช่หรือไม่?")) {
-        this.$store.commit("removeDevice", deviceId);
-      }
-    },
-    async toggleDevice(deviceId) {
-      try {
-        console.log("Device ID:", deviceId); // ตรวจสอบค่า deviceId
-        if (!deviceId) {
-          console.error("Device ID is undefined");
-          return;
-        }
-        // ค้นหาอุปกรณ์โดยใช้ deviceId
-        const device = this.devices.find(device => device._id === deviceId);
-        if (!device) {
-          console.error("Device not found:", deviceId);
-          return;
-        }
-
-        // สถานะใหม่ (สลับระหว่าง on/off)
-        const newStatus = device.status === 'on' ? 'off' : 'on';
-        console.log("Toggling device:", deviceId, "to", newStatus);
-
-        // เรียก API เพื่อควบคุม Tapo P110
-        const response = await axios.put(`http://localhost:5000/api/smartplug/${deviceId}/${newStatus}`);
-
-        if (response.status === 200) {
-          // อัปเดตสถานะใน local state
-          device.status = newStatus;
-          console.log("Device toggled successfully:", deviceId, "is now", newStatus);
-        } else {
-          console.error('Failed to toggle device:', response.data);
-        }
-      } catch (error) {
-        console.error('Failed to toggle device:', error.response?.data || error.message);
-      }
-    },
-    async confirmDelete(deviceId) {
-      try {
-        await axios.delete(`http://localhost:5000/api/devices/${deviceId}`);
-        this.devices = this.devices.filter(device => device._id !== deviceId);
-      } catch (error) {
-        console.error('Failed to delete device:', error.response?.data || error.message);
+        console.error("Failed to delete device:", error.response?.data || error.message);
       }
     },
   },
   mounted() {
     this.fetchEnergy();
-  }
+  },
 };
 </script>
 
 <style scoped>
-/* Layout */
+/* CSS styles */
 .room-container {
   display: flex;
   height: 100vh;
@@ -204,7 +183,6 @@ h1 {
   padding-bottom: 30px;
 }
 
-/* Main Content */
 .content {
   flex-grow: 1;
   padding: 20px;
@@ -216,7 +194,6 @@ h1 {
   font-weight: bold;
 }
 
-/* ปุ่มเพิ่มอุปกรณ์ */
 .add-device-btn {
   background-color: #0057d9;
   color: white;
@@ -231,7 +208,6 @@ h1 {
   background-color: #0042a5;
 }
 
-/* รายการอุปกรณ์ */
 .device-list {
   display: flex;
   flex-direction: column;
@@ -239,7 +215,6 @@ h1 {
   padding: 10px;
 }
 
-/* Popup Overlay */
 .modal-overlay,
 .modal-del {
   position: fixed;
@@ -253,7 +228,6 @@ h1 {
   align-items: center;
 }
 
-/* Popup */
 .modal,
 .modal-content-del {
   background: white;
@@ -262,7 +236,6 @@ h1 {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Header */
 .modal-header,
 .modal-header-del {
   display: flex;
@@ -270,7 +243,6 @@ h1 {
   align-items: center;
 }
 
-/* ปุ่มปิด */
 .close-btn,
 .close-btn-del {
   background: none;
@@ -279,7 +251,6 @@ h1 {
   cursor: pointer;
 }
 
-/* Input Fields */
 .modal-body input {
   width: 100%;
   padding: 10px;
@@ -289,7 +260,6 @@ h1 {
   box-sizing: border-box;
 }
 
-/* ปุ่มยืนยัน */
 .confirm-btn,
 .confirm-btn-del {
   background: #0057d9;

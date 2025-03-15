@@ -4,7 +4,7 @@
       <div class="device-info">
         <h3>{{ device.plugname }}</h3>
         <p>พลังงานไฟฟ้า: {{ device.current_power }} W</p>
-        <p>เวลาที่ใช้: {{ this.today_runtime }} ชม.</p>
+        <p>เวลาที่ใช้: {{ device.today_runtime }} ชม.</p>
       </div>
       <div class="device-actions">
         <label class="switch">
@@ -14,19 +14,12 @@
         <button class="delete-button" @click="removeDevice">🗑️</button>
       </div>
     </div>
-    <!-- Modal แจ้งเตือน -->
-    <div v-if="showModal" class="modal-overlay">
-      <div class="modal-content">
-        <h2>ยืนยันที่จะลบ</h2>
-        <p>{{ device.devicename }}</p>
-        <button @click="deleteDevice" class="delete-button">ยืนยัน</button>
-        <button @click="showModal = false" class="delete-button">ยกเลิก</button>
-      </div>
-    </div>
   </div>
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   props: {
     device: {
@@ -36,49 +29,39 @@ export default {
   },
   data() {
     return {
-      showModal: false,
       deviceStatus: this.device.status, // ใช้ local data แทน props
-      today_runtime: Math.floor(this.device.today_runtime/60)
     };
   },
   methods: {
     async toggleDevice() {
-        try {
-            // สถานะใหม่ (สลับระหว่าง on/off)
-            const newStatus = this.deviceStatus ? "on" : "off";
-            console.log("Device_id:",this.device._id)
-            // เรียก API เพื่อควบคุม Tapo P110
-            const response = await fetch(`http://localhost:5000/api/smartplug/${this.device._id}/${newStatus}`, {
-                method: "PUT",
-            });
+      try {
+        const newStatus = this.deviceStatus ? 'on' : 'off'; // สถานะใหม่ (สลับระหว่าง on/off)
+        console.log(`Toggling device: ${this.device._id}, action: ${newStatus}`);
 
-            if (!response.ok) {
-                throw new Error("Failed to control device");
-            }
+        // เรียก API เพื่อควบคุม Tapo P110
+        const response = await axios.put(`http://localhost:5000/api/smartplug/${this.device._id}/${newStatus}`);
 
-            // อัปเดตสถานะใน local state
-            this.deviceStatus = !this.deviceStatus;
-
-            // ส่ง event ไปยัง parent component (Room.vue)
-            this.$emit('toggle-device', this.device._id);
-        } catch (error) {
-            console.error("Failed to toggle device:", error);
-            // ยกเลิกการเปลี่ยนสถานะสวิชหากเกิดข้อผิดพลาด
-            this.deviceStatus = !this.deviceStatus;
+        if (response.status === 200) {
+          // อัปเดตสถานะใน local state
+          this.deviceStatus = newStatus;
+          // ส่ง event ไปยัง Room.vue เพื่ออัปเดตสถานะ (ถ้าจำเป็น)
+          this.$emit('toggle-device', this.device._id);
+        } else {
+          console.error('Failed to toggle device:', response.data);
         }
+      } catch (error) {
+        console.error('Failed to toggle device:', error.response?.data || error.message);
+      }
     },
     removeDevice() {
-      this.showModal = true; // แสดง modal ยืนยันการลบ
-    },
-    deleteDevice() {
-      this.$emit('delete-device', this.device._id); // ส่ง event ไปยัง Room.vue
-      this.showModal = false; // ปิด modal
+      this.$emit('delete-device', this.device._id); // ส่ง event ไปยัง Room.vue เพื่อลบอุปกรณ์
     },
   },
 };
 </script>
 
 <style scoped>
+/* CSS styles */
 .device-card {
   display: flex;
   justify-content: space-between;
@@ -132,11 +115,11 @@ export default {
   border-radius: 50%;
 }
 
-input:checked+.slider {
+input:checked + .slider {
   background-color: #4caf50;
 }
 
-input:checked+.slider:before {
+input:checked + .slider:before {
   transform: translateX(14px);
 }
 
@@ -147,30 +130,5 @@ input:checked+.slider:before {
   padding: 5px 10px;
   cursor: pointer;
   border-radius: 5px;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal-content {
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  text-align: center;
-}
-
-.delete-button {
-  background-color: red;
-  padding: 10px;
-  margin: 10px;
 }
 </style>

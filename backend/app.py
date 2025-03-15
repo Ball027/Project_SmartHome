@@ -14,7 +14,7 @@ client = MongoClient(mongo_uri)
 db = client["SmartHome"]  # ชื่อ database
 collection = db["SmartPlugs"]  # ชื่อ collection
 
-async def get_energy_data(plugname, email, password, ip_address,_id):
+async def get_energy_data(plugname, _id, email, password, ip_address):
     try:
         client = ApiClient(email, password)
         device = await client.p110(ip_address)
@@ -75,7 +75,7 @@ def energy(room, userid):
                 results.append({"ip_address": ip_address, "error": "Missing credentials or IP address"})
                 continue
 
-            energy_data = asyncio.run(get_energy_data(plugname, email, password, ip_address,_id))
+            energy_data = asyncio.run(get_energy_data(plugname, _id, email, password, ip_address))
             results.append(energy_data)
 
         return jsonify(results)
