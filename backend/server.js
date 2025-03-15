@@ -43,7 +43,7 @@ app.get('/api/energy/:room/:userid', async (req, res) => {
 app.put('/api/smartplug/:device_id/:action', async (req, res) => {
   try {
     const { device_id, action } = req.params;  // ดึง device_id และ action จาก path parameters
-    console.log(`Toggling device: ${device_id}, action: ${action}`);
+    //console.log(`Toggling device: ${device_id}, action: ${action}`);
 
     // เรียก Flask API เพื่อควบคุม Tapo P110
     const response = await axios.put(`http://localhost:5000/api/smartplug/${device_id}/${action}`);
