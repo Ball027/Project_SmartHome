@@ -85,6 +85,7 @@ def energy(room, userid):
 @app.route('/api/smartplug/<device_id>/<action>', methods=['PUT'])
 def control_tapo(device_id, action):
     try:
+        print(f"Received device_id: {device_id}")
         # ค้นหาข้อมูล Smart Plug จาก MongoDB
         device = collection.find_one({"_id": ObjectId(device_id)})
         if not device:

@@ -24,6 +24,7 @@ app.use((req, res, next) => {
   next();
 });
 
+// API สำหรับดึงข้อมูลจากsmartplug
 app.get('/api/energy/:room/:userid', async (req, res) => {
   try {
     const { room, userid } = req.params;  // ดึง room และ userid จาก path parameters
@@ -35,6 +36,21 @@ app.get('/api/energy/:room/:userid', async (req, res) => {
   } catch (error) {
     console.error('Failed to fetch energy data:', error.message);
     res.status(500).json({ message: 'Failed to fetch energy data', error: error.message });
+  }
+});
+
+// API สำหรับควบคุมสวิช (เปิด/ปิด)
+app.put('/api/smartplug/:device_id/:action', async (req, res) => {
+  try {
+    const { device_id, action } = req.params;  // ดึง device_id และ action จาก path parameters
+    console.log(`Toggling device: ${device_id}, action: ${action}`);
+
+    // เรียก Flask API เพื่อควบคุม Tapo P110
+    const response = await axios.put(`http://localhost:5000/api/smartplug/${device_id}/${action}`);
+    res.json(response.data);  // ส่งผลลัพธ์กลับไปยัง Frontend
+  } catch (error) {
+    console.error('Failed to toggle device:', error.message);
+    res.status(500).json({ message: 'Failed to toggle device', error: error.message });
   }
 });
 
