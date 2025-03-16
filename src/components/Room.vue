@@ -20,6 +20,13 @@
             <input type="email" placeholder="อีเมล" v-model="email" required />
             <input type="password" placeholder="รหัสผ่าน" v-model="password" required />
             <input type="text" placeholder="ที่อยู่ IP" v-model="ipAddress" required />
+            
+            <!-- เพิ่ม Dropdown สำหรับเลือกชนิดของ plug -->
+            <select v-model="selectedPlugType" required>
+              <option value="" disabled>เลือกชนิดของ Plug</option>
+              <option value="TP-Link Tapo P110">TP-Link Tapo P110</option>
+              <option value="TP-Link Tapo P115">TP-Link Tapo P115</option>
+            </select>
           </div>
           <div class="modal-footer">
             <button @click="addDevice" class="confirm-btn">ยืนยัน</button>
@@ -70,22 +77,23 @@ export default {
       showDeleteModal: false,
       selectedDevice: null,
       userid: localStorage.getItem("userid"),
-      room: this.$route.params.room, // ดึง room จาก URL
+      room: this.$route.params.room,
       devices: [],
       email: "",
       password: "",
       ipAddress: "",
       smartplugname: "",
+      selectedPlugType: "", // เพิ่ม property นี้
       interval: null,
     };
   },
   watch: {
     "$route.params.room": {
-      immediate: true, // เรียกทันทีเมื่อ component ถูกสร้าง
+      immediate: true,
       handler(newRoom) {
         this.room = newRoom;
-        this.devices = []; // เคลียร์ devices array
-        this.fetchEnergy(); // ดึงข้อมูลอุปกรณ์ใหม่
+        this.devices = [];
+        this.fetchEnergy();
       },
     },
   },
@@ -101,9 +109,9 @@ export default {
       this.deviceName = "";
       this.voltage = "";
       this.power = "";
+      this.selectedPlugType = ""; // รีเซ็ตค่าชนิดของ Plug
     },
     async addDevice() {
-      // ตรวจสอบว่าข้อมูลในช่อง input ถูกกรอกครบถ้วนหรือไม่
       if (!this.smartplugname.trim()) {
         alert("กรุณากรอกชื่อ SmartPlug");
         return;
@@ -120,6 +128,11 @@ export default {
         alert("กรุณากรอกที่อยู่ Ipaddress ของ Smartplug");
         return;
       }
+      if (!this.selectedPlugType) {
+        alert("กรุณาเลือกชนิดของ Plug");
+        return;
+      }
+
       try {
         const response = await axios.post("http://localhost:5000/api/addsmartplugs", {
           room: this.room,
@@ -128,26 +141,26 @@ export default {
           password: this.password,
           ipAddress: this.ipAddress,
           smartplugname: this.smartplugname,
+          type: this.selectedPlugType, // ส่งชนิดของ Plug ไปยัง API
         });
-        this.devices.push(response.data); // เพิ่มอุปกรณ์ใหม่เข้าไปในรายการ
+        this.devices.push(response.data);
         this.closeModal();
       } catch (error) {
         console.error("Failed to add device:", error.response?.data || error.message);
       }
-
     },
     async fetchEnergy() {
       try {
         const response = await axios.get(
           `http://localhost:5000/api/energy/${this.room}/${this.userid}`
         );
-        this.devices = response.data; // อัปเดตข้อมูลอุปกรณ์
+        console.log(this.devices);
+        this.devices = response.data;
       } catch (error) {
         console.error("Failed to fetch energy data:", error.response?.data || error.message);
       }
     },
     updateDeviceStatus(deviceId) {
-      // อัปเดตสถานะของอุปกรณ์ใน local state
       const device = this.devices.find((device) => device._id === deviceId);
       if (device) {
         device.status = device.status === "on" ? "off" : "on";
@@ -178,12 +191,12 @@ export default {
   mounted() {
     this.fetchEnergy();
     this.interval = setInterval(() => {
-      this.fetchEnergy(); // เรียก fetchEnergy ทุกๆ 1 นาที
-    }, 60000); // 60000 มิลลิวินาที = 1 นาที
+      this.fetchEnergy();
+    }, 60000);
   },
   beforeUnmount() {
     if (this.interval) {
-      clearInterval(this.interval); // ล้าง interval
+      clearInterval(this.interval);
     }
   },
 };
@@ -269,13 +282,16 @@ h1 {
   cursor: pointer;
 }
 
-.modal-body input {
+.modal-body input,
+.modal-body select {
   width: 100%;
   padding: 10px;
   margin: 10px 0;
   border-radius: 5px;
   border: 1px solid #ccc;
   box-sizing: border-box;
+  background-color: white;
+  font-size: 16px;
 }
 
 .confirm-btn,

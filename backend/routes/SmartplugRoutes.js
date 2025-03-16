@@ -4,7 +4,7 @@ const Smartplug = require("../models/SmartPlug"); // สมมติว่าค
 
 // เพิ่ม Smartplug
 router.post("/api/addsmartplugs", async (req, res) => {
-  const { room, userid, email, password, ipAddress, smartplugname } = req.body;
+  const { room, userid, email, password, ipAddress, smartplugname, type } = req.body;
 
   try {
     const newSmartplug = new Smartplug({
@@ -14,6 +14,7 @@ router.post("/api/addsmartplugs", async (req, res) => {
       password,
       ipAddress,
       smartplugname,
+      type,
     });
 
     await newSmartplug.save();
