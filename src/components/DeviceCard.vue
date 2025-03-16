@@ -11,16 +11,19 @@
           <input type="checkbox" v-model="deviceStatus" @change="toggleDevice" />
           <span class="slider round"></span>
         </label>
-        <button class="delete-button" @click="removeDevice">🗑️</button>
+        <button class="delete-button" @click="modalremoveDevice">🗑️</button>
       </div>
     </div>
-    <!-- Modal แจ้งเตือน -->
+
+    <!-- Modal ยืนยันการลบ -->
     <div v-if="showModal" class="modal-overlay">
       <div class="modal-content">
-        <h2>ยืนยันที่จะลบ</h2>
-        <p>{{ device.devicename }}</p>
-        <button @click="deleteDevice" class="delete-button">ยืนยัน</button>
-        <button @click="showModal = false" class="delete-button">ยกเลิก</button>
+        <h2>ยืนยันการลบ</h2>
+        <p>คุณแน่ใจหรือไม่ว่าต้องการลบ <strong>{{ device.plugname }}</strong>?</p>
+        <div class="modal-buttons">
+          <button @click="deleteDevice" class="confirm-button">ยืนยัน</button>
+          <button @click="showModal = false" class="cancel-button">ยกเลิก</button>
+        </div>
       </div>
     </div>
   </div>
@@ -37,33 +40,21 @@ export default {
   data() {
     return {
       showModal: false,
-      deviceStatus: this.device.status, // ใช้ local data แทน props
-      // today_runtime: Math.floor(this.device.today_runtime/60)
+      deviceStatus: this.device.status,
     };
   },
   methods: {
     toggleDevice() {
-      this.$emit('toggle-device', this.device._id); // ส่ง event ไปยัง Room.vue
+      this.$emit('toggle-device', this.device._id);
     },
-    removeDevice() {
-      this.showModal = true; // แสดง modal ยืนยันการลบ
+    modalremoveDevice() {
+      this.showModal = true;
     },
     deleteDevice() {
-      this.$emit('delete-device', this.device._id); // ส่ง event ไปยัง Room.vue
-      this.showModal = false; // ปิด modal
+      this.$emit('delete-device', this.device._id);
+      this.showModal = false;
     },
-    // async fetchEnergyData() {
-    //   try {
-    //     const response = await axios.get('http://localhost:5000/api/energy');
-    //     this.energyData = response.data;
-    //   } catch (error) {
-    //     console.error('Failed to fetch energy data:', error.response?.data || error.message);
-    //   }
-    // },
   },
-  // mounted() {
-  //   this.fetchEnergyData(); // ดึงข้อมูลพลังงานเมื่อ component ถูกสร้าง
-  // },
 };
 </script>
 
@@ -121,11 +112,11 @@ export default {
   border-radius: 50%;
 }
 
-input:checked+.slider {
+input:checked + .slider {
   background-color: #4caf50;
 }
 
-input:checked+.slider:before {
+input:checked + .slider:before {
   transform: translateX(14px);
 }
 
@@ -152,14 +143,42 @@ input:checked+.slider:before {
 
 .modal-content {
   background: white;
-  padding: 30px;
+  padding: 20px;
   border-radius: 8px;
   text-align: center;
+  max-width: 300px;
+  width: 100%;
 }
 
-.delete-button {
-  background-color: red;
-  padding: 10px;
-  margin: 10px;
+.modal-content h2 {
+  margin-bottom: 10px;
+}
+
+.modal-content p {
+  margin-bottom: 20px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.confirm-button {
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.cancel-button {
+  background-color: #ccc;
+  color: black;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
 }
 </style>

@@ -15,6 +15,7 @@ client = MongoClient(mongo_uri)
 db = client["SmartHome"]  # ชื่อ database
 collection = db["SmartPlugs"]  # ชื่อ collection
 
+#ดึงenergy_usage จาก Smartplug
 async def get_energy_data(plugname, _id, plug_type, email, password, ip_address):
     try:
         client = ApiClient(email, password)
@@ -61,7 +62,7 @@ async def get_energy_data(plugname, _id, plug_type, email, password, ip_address)
             "total_energy_month": 0,  # กำหนดค่าเป็น 0
             "total_runtime_month": 0  # กำหนดค่าเป็น 0
         }
-
+#ดึงenergy_usageตามห้อง
 @app.route('/api/energy/<room>/<userid>', methods=['GET'])
 def energy(room, userid):
     try:

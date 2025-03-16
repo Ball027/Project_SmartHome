@@ -20,7 +20,7 @@
             <input type="email" placeholder="อีเมล" v-model="email" required />
             <input type="password" placeholder="รหัสผ่าน" v-model="password" required />
             <input type="text" placeholder="ที่อยู่ IP" v-model="ipAddress" required />
-            
+
             <!-- เพิ่ม Dropdown สำหรับเลือกชนิดของ plug -->
             <select v-model="selectedPlugType" required>
               <option value="" disabled>เลือกชนิดของ Plug</option>
@@ -37,24 +37,7 @@
       <!-- แสดงรายการอุปกรณ์ -->
       <div class="device-list">
         <DeviceCard v-for="device in devices" :key="device._id" :device="device" @toggle-device="updateDeviceStatus"
-          @delete-device="confirmDelete" />
-      </div>
-
-      <!-- Modal ยืนยันการลบ -->
-      <div v-if="showDeleteModal" class="modal-del">
-        <div class="modal-content-del">
-          <div class="modal-header-del">
-            <h3>ยืนยันการลบ</h3>
-            <button @click="closeDeleteModal" class="close-btn-del">X</button>
-          </div>
-          <div class="modal-body-del">
-            <p><b>{{ selectedDevice?.name || 'อุปกรณ์' }}</b></p>
-          </div>
-          <div class="modal-footer-del">
-            <button @click="deleteDevice" class="confirm-btn-del">ยืนยัน</button>
-            <button @click="closeDeleteModal" class="cancel-btn-del">ยกเลิก</button>
-          </div>
-        </div>
+          @delete-device="deleteDevice" />
       </div>
     </main>
   </div>
@@ -106,10 +89,11 @@ export default {
       this.resetForm();
     },
     resetForm() {
-      this.deviceName = "";
-      this.voltage = "";
-      this.power = "";
-      this.selectedPlugType = ""; // รีเซ็ตค่าชนิดของ Plug
+      this.smartplugname = "";
+      this.email = "";
+      this.password = "";
+      this.ipAddress = "";
+      this.selectedPlugType = "";
     },
     async addDevice() {
       if (!this.smartplugname.trim()) {
@@ -166,25 +150,20 @@ export default {
         device.status = device.status === "on" ? "off" : "on";
       }
     },
-    confirmDelete(deviceId) {
-      this.selectedDevice = this.devices.find((device) => device._id === deviceId);
-      this.showDeleteModal = true;
-    },
-    closeDeleteModal() {
-      this.showDeleteModal = false;
-      this.selectedDevice = null;
-    },
-    async deleteDevice() {
+    // closeDeleteModal() {
+    //   this.showDeleteModal = false;
+    //   this.selectedDevice = null;
+    // },
+    async deleteDevice(deviceId) {
       try {
-        await axios.delete(
-          `http://localhost:5000/api/devices/${this.selectedDevice._id}`
+        const response = await axios.delete(
+          `http://localhost:5000/api/deleteplug/${deviceId}`
         );
-        this.devices = this.devices.filter(
-          (device) => device._id !== this.selectedDevice._id
-        );
-        this.closeDeleteModal();
+        alert(response.data.message); // แจ้งเตือนว่าลบสำเร็จ
+        this.devices = this.devices.filter(device => device._id !== deviceId); // อัปเดต local state
       } catch (error) {
         console.error("Failed to delete device:", error.response?.data || error.message);
+        alert("Failed to delete device");
       }
     },
   },

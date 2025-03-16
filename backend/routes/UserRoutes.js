@@ -4,7 +4,7 @@ const router = express.Router();
 const User = require('../models/User');
 
 //ดึงข้อมูลusername
-router.get("/", authMiddleware,async (req, res) => {
+router.get("/api/user", authMiddleware,async (req, res) => {
     try {
       const user_id = req.user_id; // สมมติว่าคุณเก็บ userId ใน request หลังจาก authentication
       const user = await User.findById(user_id); // ดึงข้อมูลผู้ใช้งานจาก MongoDB
