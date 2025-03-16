@@ -4,7 +4,7 @@
       <div class="device-info">
         <h3>{{ device.plugname }}</h3>
         <p>พลังงานไฟฟ้า: {{ device.current_power }} W</p>
-        <p>เวลาที่ใช้: {{ this.today_runtime }} ชม.</p>
+        <p>เวลาที่ใช้: {{ device.today_runtime }} ชม.</p>
       </div>
       <div class="device-actions">
         <label class="switch">
@@ -38,7 +38,6 @@ export default {
     return {
       showModal: false,
       deviceStatus: this.device.status, // ใช้ local data แทน props
-      today_runtime: Math.floor(this.device.today_runtime/60)
     };
   },
   methods: {
