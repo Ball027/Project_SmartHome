@@ -5,7 +5,7 @@ import asyncio
 from datetime import datetime
 from pymongo import MongoClient
 from bson import ObjectId
-
+import math
 app = Flask(__name__)
 
 # เชื่อมต่อ MongoDB
@@ -33,7 +33,7 @@ async def get_energy_data(plugname, email, password, ip_address):
             "ip_address": ip_address,
             "current_power": current_power.to_dict().get("current_power", 0),  # พลังงานปัจจุบัน วัตต์ (W)
             "today_energy": today_energy,  # พลังงานที่ใช้วันนี้ วัตต์-ชั่วโมง (Wh)
-            "today_runtime": today_runtime,  # เวลาที่ใช้วันนี้ นาที
+            "today_runtime": math.floor(today_runtime/60),  # เวลาที่ใช้วันนี้ นาที
             "total_energy_month": energy_usage.to_dict().get("month_energy", 0),
             "total_runtime_month": energy_usage.to_dict().get("month_runtime", 0)
         }
