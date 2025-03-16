@@ -5,7 +5,8 @@ import asyncio
 from datetime import datetime
 from pymongo import MongoClient
 from bson import ObjectId
-import math
+import math  # สำหรับการปัดเศษ
+
 app = Flask(__name__)
 
 # เชื่อมต่อ MongoDB
@@ -14,10 +15,17 @@ client = MongoClient(mongo_uri)
 db = client["SmartHome"]  # ชื่อ database
 collection = db["SmartPlugs"]  # ชื่อ collection
 
-async def get_energy_data(plugname, email, password, ip_address):
+async def get_energy_data(plugname, _id, plug_type, email, password, ip_address):
     try:
         client = ApiClient(email, password)
-        device = await client.p110(ip_address)
+        
+        # ตรวจสอบชนิดของ plug
+        if plug_type == "TP-Link Tapo P110":
+            device = await client.p110(ip_address)
+        elif plug_type == "TP-Link Tapo P115":
+            device = await client.p115(ip_address)
+        else:
+            raise ValueError(f"Unknown plug type: {plug_type}")
 
         # ดึงข้อมูลพลังงาน
         current_power = await device.get_current_power()
@@ -27,22 +35,25 @@ async def get_energy_data(plugname, email, password, ip_address):
         today_energy = energy_usage.to_dict().get("today_energy", 0)
         today_runtime = energy_usage.to_dict().get("today_runtime", 0)
 
+        # แปลง total_runtime จากนาทีเป็นชั่วโมง (ปัดเศษลง)
+        today_runtime_hours = math.floor(today_runtime / 60)
+
         return {
             "plugname": plugname,
-            # "_id": _id,
+            "_id": str(_id),
             "ip_address": ip_address,
             "current_power": current_power.to_dict().get("current_power", 0),  # พลังงานปัจจุบัน วัตต์ (W)
             "today_energy": today_energy,  # พลังงานที่ใช้วันนี้ วัตต์-ชั่วโมง (Wh)
-            "today_runtime": math.floor(today_runtime/60),  # เวลาที่ใช้วันนี้ นาที
+            "today_runtime": today_runtime_hours,  # เวลาที่ใช้วันนี้ ชั่วโมง
             "total_energy_month": energy_usage.to_dict().get("month_energy", 0),
-            "total_runtime_month": energy_usage.to_dict().get("month_runtime", 0)
+            "total_runtime_month": math.floor(energy_usage.to_dict().get("month_runtime", 0) / 60)  # เวลาที่ใช้ในเดือนนี้ ชั่วโมง
         }
     except Exception as e:
         print(f"Failed to fetch data from Smartplug(OFF): {e}")
         # หากดึงข้อมูลไม่สำเร็จ (อุปกรณ์ปิดอยู่หรือไม่สามารถเชื่อมต่อได้)
         return {
             "plugname": plugname,
-            # "_id": _id,
+            "_id": str(_id),
             "ip_address": ip_address,
             "current_power": 0,  # กำหนดค่าเป็น 0
             "today_energy": 0,  # กำหนดค่าเป็น 0
@@ -56,8 +67,12 @@ def energy(room, userid):
     try:
         print(f"Received room: {room}, userid: {userid}")  # แสดงค่า room และ userid
         object_userid = ObjectId(userid)
+        
         # ดึงข้อมูล Smart Plugs จาก MongoDB
-        smart_plugs = list(collection.find({"room": room, "userid": object_userid}, {"_id": 1, "smartplugname": 1, "email": 1, "password": 1, "ipAddress": 1}))
+        smart_plugs = list(collection.find(
+            {"room": room, "userid": object_userid},
+            {"_id": 1, "smartplugname": 1, "email": 1, "password": 1, "ipAddress": 1, "type": 1}
+        ))
 
         if not smart_plugs:
             return jsonify({"message": "No smart plugs found in database"}), 404
@@ -66,16 +81,22 @@ def energy(room, userid):
         results = []
         for plug in smart_plugs:
             plugname = plug.get("smartplugname")
-            # _id = plug.get("_id")
+            _id = plug.get("_id")
             email = plug.get("email")
             password = plug.get("password")
             ip_address = plug.get("ipAddress")
+            plug_type = plug.get("type")  # ดึงชนิดของ plug
 
-            if not email or not password or not ip_address:
-                results.append({"ip_address": ip_address, "error": "Missing credentials or IP address"})
+            # ตรวจสอบว่าข้อมูลครบถ้วน
+            if not all([email, password, ip_address, plug_type]):
+                results.append({
+                    "plugname": plugname,
+                    "ip_address": ip_address,
+                    "error": "Missing credentials, IP address, or plug type"
+                })
                 continue
 
-            energy_data = asyncio.run(get_energy_data(plugname, email, password, ip_address))
+            energy_data = asyncio.run(get_energy_data(plugname, _id, plug_type, email, password, ip_address))
             results.append(energy_data)
 
         return jsonify(results)
