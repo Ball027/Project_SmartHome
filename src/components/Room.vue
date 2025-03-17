@@ -36,7 +36,7 @@
 
       <!-- แสดงรายการอุปกรณ์ -->
       <div class="device-list">
-        <DeviceCard v-for="device in devices" :key="device._id" :device="device" @toggle-device="updateDeviceStatus"
+        <DeviceCard v-for="device in devices" :key="device._id" :device="device" @update-device-status="UpdateDeviceStatus" @toggle-device="updateDeviceStatus"
           @delete-device="deleteDevice" />
       </div>
     </main>
@@ -144,10 +144,10 @@ export default {
         console.error("Failed to fetch energy data:", error.response?.data || error.message);
       }
     },
-    updateDeviceStatus(deviceId) {
-      const device = this.devices.find((device) => device._id === deviceId);
+    UpdateDeviceStatus({ id, status }) {
+      const device = this.devices.find((device) => device._id === id);
       if (device) {
-        device.status = device.status === "on" ? "off" : "on"; // สลับสถานะ
+        device.status = status;
       }
     },
     // closeDeleteModal() {

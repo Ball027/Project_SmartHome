@@ -2,10 +2,13 @@ from flask import Flask, jsonify, request
 from tapo import ApiClient
 from tapo.requests import EnergyDataInterval
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from pymongo import MongoClient
 from bson import ObjectId
-import math  # สำหรับการปัดเศษ
+import math
+import schedule
+import time
+from threading import Thread
 
 app = Flask(__name__)
 
@@ -14,6 +17,7 @@ mongo_uri = "mongodb://localhost:27017/SmartHome"
 client = MongoClient(mongo_uri)
 db = client["SmartHome"]  # ชื่อ database
 collection = db["SmartPlugs"]  # ชื่อ collection
+power_records_collection = db["PowerRecords"]  # ชื่อ collection สำหรับบันทึกข้อมูลพลังงานรายเดือน
 
 #ดึงenergy_usage จาก Smartplug
 async def get_energy_data(plugname, _id, plug_type, email, password, ip_address):
@@ -106,6 +110,7 @@ def energy(room, userid):
     except Exception as e:
         return jsonify({"message": "Failed to fetch energy data", "error": str(e)}), 500
 
+#ควบคุมการ On/Off Smartplug
 @app.route('/api/toggle-plug/<device_id>', methods=['PUT'])
 async def toggle_plug(device_id):
     try:
@@ -149,5 +154,98 @@ async def toggle_plug(device_id):
     except Exception as e:
         return jsonify({"message": "Failed to toggle device", "error": str(e)}), 500
 
+def save_monthly_data():
+    print("กำลังบันทึกข้อมูลทุกสิ้นเดือน...")
+    try:
+        # ดึงข้อมูลผู้ใช้ทั้งหมดจาก MongoDB (หรือดึงเฉพาะ userid ที่ต้องการ)
+        users = list(db["Users"].find({}, {"_id": 1}))  # สมมติว่ามี collection "Users" สำหรับเก็บข้อมูลผู้ใช้
+
+        if not users:
+            print("No users found in database")
+            return
+
+        # สำหรับแต่ละผู้ใช้
+        for user in users:
+            userid = user["_id"]
+            print(f"กำลังบันทึกข้อมูลสำหรับ userid: {userid}")
+
+            # ดึงข้อมูล Smart Plugs ของผู้ใช้นี้
+            smart_plugs = list(collection.find({"userid": userid}))
+
+            if not smart_plugs:
+                print(f"No smart plugs found for userid: {userid}")
+                continue
+
+            # เรียก Tapo API สำหรับทุก Smart Plug ของผู้ใช้นี้
+            for plug in smart_plugs:
+                plugname = plug.get("smartplugname")
+                _id = plug.get("_id")
+                email = plug.get("email")
+                password = plug.get("password")
+                ip_address = plug.get("ipAddress")
+                room = plug.get("room")
+                plug_type = plug.get("type")  # ดึงชนิดของ plug
+
+                # ตรวจสอบว่าข้อมูลครบถ้วน
+                if not all([email, password, ip_address, plug_type]):
+                    print(f"Missing credentials, IP address, or plug type for {plugname}")
+                    continue
+
+                energy_data = asyncio.run(get_energy_data(plugname, _id, plug_type, email, password, ip_address))
+                print(f"บันทึกข้อมูลสำหรับ {plugname}: {energy_data}")
+
+                # ตรวจสอบว่ามีข้อมูลสำหรับเดือนนี้แล้วหรือไม่
+                existing_record = power_records_collection.find_one({
+                    "smartplugid": _id,
+                    "date": datetime.now().strftime("%Y-%m")
+                })
+
+                if existing_record:
+                    print(f"ข้อมูลสำหรับ {plugname} ในเดือนนี้ถูกบันทึกแล้ว")
+                    continue
+
+                # บันทึกข้อมูลลงในคอลเลกชัน PowerRecords
+                power_records_collection.insert_one({
+                    "smartplugid": _id,
+                    "smartplugname": plugname,
+                    "userid": userid,
+                    "room": room,
+                    "date": datetime.now().strftime("%Y-%m"),  # รูปแบบเดือน/ปี
+                    "total_energy_month": energy_data["total_energy_month"],
+                    "total_runtime_month": energy_data["total_runtime_month"],
+                })
+
+    except Exception as e:
+        print(f"Failed to save monthly data: {e}")
+
+def mock_today(mock_date=None):
+    if mock_date:
+        return mock_date  # ใช้ mock_date ที่ส่งมา
+    return datetime.today()  # ใช้วันที่ปัจจุบันจริง
+
+def is_last_day_of_month():
+    today = mock_today()
+    tomorrow = today + timedelta(days=1)
+    return tomorrow.month != today.month
+print(is_last_day_of_month())  # ผลลัพธ์: True
+def schedule_monthly_task():
+    if is_last_day_of_month():
+        print(f"สิ้นเดือนแล้ว")
+        save_monthly_data()
+
+# ตั้งเวลาให้รันทุกวัน เวลา 23:59
+schedule.every().day.at("23:59").do(schedule_monthly_task)
+
+# ฟังก์ชันรัน scheduler ใน Thread แยก
+def run_scheduler():
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
+
 if __name__ == '__main__':
+    # schedule_monthly_task()ใช้ทดสอบเนื่องจากไม่สามารถรันapp.pyได้24/7
+    #เพื่อไม่ให้ทำงานทับกันเพราะschedule_pendingต้องรันตลอดเวลาเพื่อเช็คเวลาที่จะถึง
+    scheduler_thread = Thread(target=run_scheduler) #สร้างThreadสำหรับrun_schedule
+    scheduler_thread.daemon = True  #Thread ปิดเมื่อโปรแกรมหลักปิด
+    scheduler_thread.start()
     app.run(host='0.0.0.0', port=5000)

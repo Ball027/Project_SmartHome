@@ -8,7 +8,7 @@
       </div>
       <div class="device-actions">
         <label class="switch">
-          <input type="checkbox" v-model="deviceStatus" @change="toggleDevice" />
+          <input type="checkbox" :checked="deviceStatus" @change="toggleDevice" />
           <span class="slider round"></span>
         </label>
         <button class="delete-button" @click="modalremoveDevice">🗑️</button>
@@ -46,19 +46,24 @@ export default {
   },
   methods: {
     async toggleDevice() {
+      const previousStatus = this.deviceStatus;
       try {
-        const newStatus = this.device.status === true ? "off":"on"; // สลับสถานะ
+        const newStatus = this.device.status === true ? "off" : "on"; // สลับสถานะ
         const response = await axios.put(
           `http://localhost:5000/api/toggle-plug/${this.device._id}`,
           { status: newStatus }
         );
+        alert(response.data.message); // แจ้งเตือนว่าสลับสถานะสำเร็จ
+        this.deviceStatus = newStatus === "off" ? false : true;//ปิดสวิชหากสั่งoff
+        this.$emit('update-device-status', {
+          id: this.device._id,
+          status: newStatus === "off" ? false : true,
+        });
         console.log("status switch", this.deviceStatus);
         console.log("tapo turn", newStatus);
-        alert(response.data.message); // แจ้งเตือนว่าสลับสถานะสำเร็จ
-        this.deviceStatus = newStatus === "off" ? false: true;
         this.$emit('toggle-device', this.device._id); // ส่ง event ไปยัง Room.vue เพื่ออัปเดตสถานะ
       } catch (error) {
-        this.deviceStatus === true ? true: false;
+        this.deviceStatus = previousStatus;
         console.error("Failed to toggle device:", error.response?.data || error.message);
         alert("Failed to toggle device");
       }
