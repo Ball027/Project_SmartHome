@@ -147,7 +147,7 @@ export default {
     updateDeviceStatus(deviceId) {
       const device = this.devices.find((device) => device._id === deviceId);
       if (device) {
-        device.status = device.status === "on" ? "off" : "on";
+        device.status = device.status === "on" ? "off" : "on"; // สลับสถานะ
       }
     },
     // closeDeleteModal() {

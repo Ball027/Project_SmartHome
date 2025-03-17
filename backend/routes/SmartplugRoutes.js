@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
+const axios = require('axios');
 const Smartplug = require("../models/SmartPlug"); // สมมติว่าคุณมีโมเดล Smartplug
-
 // เพิ่ม Smartplug
 router.post("/api/addsmartplugs", async (req, res) => {
   const { room, userid, email, password, ipAddress, smartplugname, type } = req.body;
@@ -40,4 +40,21 @@ router.delete("/api/deleteplug/:device_id", async (req, res) => {
   }
 });
 
+// ควบคุมการเปิด/ปิด Tapo plug
+router.put("/api/toggle-plug/:device_id", async (req, res) => {
+  try {
+    const deviceId = req.params.device_id;
+    const { status } = req.body; // status: "on" หรือ "off"
+
+    // ส่ง request ไปยัง app.py
+    const response = await axios.put(
+      `http://localhost:5000/api/toggle-plug/${deviceId}`,
+      { status }
+    );
+
+    res.status(200).json(response.data);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to toggle device", error: error.message });
+  }
+});
 module.exports = router;

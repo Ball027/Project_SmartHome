@@ -30,6 +30,7 @@
 </template>
 
 <script>
+import axios from 'axios';
 export default {
   props: {
     device: {
@@ -44,8 +45,23 @@ export default {
     };
   },
   methods: {
-    toggleDevice() {
-      this.$emit('toggle-device', this.device._id);
+    async toggleDevice() {
+      try {
+        const newStatus = this.device.status === true ? "off":"on"; // สลับสถานะ
+        const response = await axios.put(
+          `http://localhost:5000/api/toggle-plug/${this.device._id}`,
+          { status: newStatus }
+        );
+        console.log("status switch", this.deviceStatus);
+        console.log("tapo turn", newStatus);
+        alert(response.data.message); // แจ้งเตือนว่าสลับสถานะสำเร็จ
+        this.deviceStatus = newStatus === "off" ? false: true;
+        this.$emit('toggle-device', this.device._id); // ส่ง event ไปยัง Room.vue เพื่ออัปเดตสถานะ
+      } catch (error) {
+        this.deviceStatus === true ? true: false;
+        console.error("Failed to toggle device:", error.response?.data || error.message);
+        alert("Failed to toggle device");
+      }
     },
     modalremoveDevice() {
       this.showModal = true;
@@ -112,11 +128,11 @@ export default {
   border-radius: 50%;
 }
 
-input:checked + .slider {
+input:checked+.slider {
   background-color: #4caf50;
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
   transform: translateX(14px);
 }
 

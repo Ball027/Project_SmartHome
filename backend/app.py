@@ -47,7 +47,8 @@ async def get_energy_data(plugname, _id, plug_type, email, password, ip_address)
             "today_energy": today_energy,  # พลังงานที่ใช้วันนี้ วัตต์-ชั่วโมง (Wh)
             "today_runtime": today_runtime_hours,  # เวลาที่ใช้วันนี้ ชั่วโมง
             "total_energy_month": energy_usage.to_dict().get("month_energy", 0),
-            "total_runtime_month": math.floor(energy_usage.to_dict().get("month_runtime", 0) / 60)  # เวลาที่ใช้ในเดือนนี้ ชั่วโมง
+            "total_runtime_month": math.floor(energy_usage.to_dict().get("month_runtime", 0) / 60),  # เวลาที่ใช้ในเดือนนี้ ชั่วโมง
+            "status": True,
         }
     except Exception as e:
         print(f"Failed to fetch data from Smartplug(OFF): {e}")
@@ -60,7 +61,8 @@ async def get_energy_data(plugname, _id, plug_type, email, password, ip_address)
             "today_energy": 0,  # กำหนดค่าเป็น 0
             "today_runtime": 0,  # กำหนดค่าเป็น 0
             "total_energy_month": 0,  # กำหนดค่าเป็น 0
-            "total_runtime_month": 0  # กำหนดค่าเป็น 0
+            "total_runtime_month": 0,  # กำหนดค่าเป็น 0
+            "status": False,
         }
 #ดึงenergy_usageตามห้อง
 @app.route('/api/energy/<room>/<userid>', methods=['GET'])
@@ -103,6 +105,49 @@ def energy(room, userid):
         return jsonify(results)
     except Exception as e:
         return jsonify({"message": "Failed to fetch energy data", "error": str(e)}), 500
+
+@app.route('/api/toggle-plug/<device_id>', methods=['PUT'])
+async def toggle_plug(device_id):
+    try:
+        data = request.get_json()
+        status = data.get("status")  # "on" หรือ "off"
+        print(f"Received status: {status}")
+        # ดึงข้อมูล plug จาก MongoDB
+        plug = collection.find_one({"_id": ObjectId(device_id)})
+        if not plug:
+            return jsonify({"message": "Device not found"}), 404
+
+        # ตรวจสอบว่าข้อมูลครบถ้วน
+        email = plug.get("email")
+        password = plug.get("password")
+        ip_address = plug.get("ipAddress")
+        plug_type = plug.get("type")
+
+        if not all([email, password, ip_address, plug_type]):
+            return jsonify({"message": "Missing credentials, IP address, or plug type"}), 400
+
+        # เชื่อมต่อกับ Tapo plug
+        client = ApiClient(email, password)
+        
+        # ตรวจสอบชนิดของ plug
+        if plug_type == "TP-Link Tapo P110":
+            device = await client.p110(ip_address)
+        elif plug_type == "TP-Link Tapo P115":
+            device = await client.p115(ip_address)
+        else:
+            return jsonify({"message": "Unknown plug type"}), 400
+
+        # เปลี่ยนสถานะ plug
+        if status == "on":
+            await device.on()
+        elif status == "off":
+            await device.off()
+        else:
+            return jsonify({"message": "Invalid status"}), 400
+
+        return jsonify({"message": f"Device turned {status}"}), 200
+    except Exception as e:
+        return jsonify({"message": "Failed to toggle device", "error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
