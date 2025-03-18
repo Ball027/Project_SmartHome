@@ -154,6 +154,26 @@ async def toggle_plug(device_id):
     except Exception as e:
         return jsonify({"message": "Failed to toggle device", "error": str(e)}), 500
 
+#คำนวนค่าไฟประจำเดือน
+def calculate_electricity_cost(total_units):
+    """
+    คำนวณค่าไฟตามอัตราก้าวหน้าของการไฟฟ้าฝ่ายผลิตแห่งประเทศไทย (กฟผ.)
+    """
+    if total_units <= 15:
+        return total_units * 2.3488
+    elif total_units <= 25:
+        return (15 * 2.3488) + ((total_units - 15) * 2.9882)
+    elif total_units <= 35:
+        return (15 * 2.3488) + (10 * 2.9882) + ((total_units - 25) * 3.2405)
+    elif total_units <= 100:
+        return (15 * 2.3488) + (10 * 2.9882) + (10 * 3.2405) + ((total_units - 35) * 3.6237)
+    elif total_units <= 150:
+        return (15 * 2.3488) + (10 * 2.9882) + (10 * 3.2405) + (65 * 3.6237) + ((total_units - 100) * 3.7171)
+    elif total_units <= 400:
+        return (15 * 2.3488) + (10 * 2.9882) + (10 * 3.2405) + (65 * 3.6237) + (50 * 3.7171) + ((total_units - 150) * 4.2218)
+    else:
+        return (15 * 2.3488) + (10 * 2.9882) + (10 * 3.2405) + (65 * 3.6237) + (50 * 3.7171) + (250 * 4.2218) + ((total_units - 400) * 4.4217)
+
 def save_monthly_data():
     print("กำลังบันทึกข้อมูลทุกสิ้นเดือน...")
     try:
@@ -176,6 +196,11 @@ def save_monthly_data():
                 print(f"No smart plugs found for userid: {userid}")
                 continue
 
+            # คำนวณพลังงานรวมและค่าไฟสำหรับผู้ใช้นี้
+            total_units_user = 0
+            total_cost = 0
+            current_month_year = datetime.now().strftime("%Y-%m")
+
             # เรียก Tapo API สำหรับทุก Smart Plug ของผู้ใช้นี้
             for plug in smart_plugs:
                 plugname = plug.get("smartplugname")
@@ -191,18 +216,26 @@ def save_monthly_data():
                     print(f"Missing credentials, IP address, or plug type for {plugname}")
                     continue
 
+                # ตรวจสอบว่ามีข้อมูลใน PowerRecords สำหรับ plug นี้ในเดือนนี้แล้วหรือไม่
+                existing_power_record = power_records_collection.find_one({
+                    "smartplugid": _id,
+                    "date": current_month_year
+                })
+
+                if existing_power_record:
+                    print(f"ข้อมูลสำหรับPowerRecord {plugname} ในเดือน {current_month_year} ถูกบันทึกแล้ว")
+                    continue
+
                 energy_data = asyncio.run(get_energy_data(plugname, _id, plug_type, email, password, ip_address))
                 print(f"บันทึกข้อมูลสำหรับ {plugname}: {energy_data}")
 
-                # ตรวจสอบว่ามีข้อมูลสำหรับเดือนนี้แล้วหรือไม่
-                existing_record = power_records_collection.find_one({
-                    "smartplugid": _id,
-                    "date": datetime.now().strftime("%Y-%m")
-                })
+                # คำนวณพลังงานรวม (kWh)
+                energy_wh = energy_data["total_energy_month"]  # พลังงานในหน่วย Wh
+                runtime_hours = energy_data["total_runtime_month"]  # เวลาในหน่วยชั่วโมง
+                units = (energy_wh / 1000) * runtime_hours  # แปลงเป็น kWh
 
-                if existing_record:
-                    print(f"ข้อมูลสำหรับ {plugname} ในเดือนนี้ถูกบันทึกแล้ว")
-                    continue
+                # เพิ่มพลังงานรวมของผู้ใช้
+                total_units_user += units
 
                 # บันทึกข้อมูลลงในคอลเลกชัน PowerRecords
                 power_records_collection.insert_one({
@@ -213,7 +246,29 @@ def save_monthly_data():
                     "date": datetime.now().strftime("%Y-%m"),  # รูปแบบเดือน/ปี
                     "total_energy_month": energy_data["total_energy_month"],
                     "total_runtime_month": energy_data["total_runtime_month"],
+                    "units": units,
                 })
+
+            # คำนวณค่าไฟ
+            total_cost = calculate_electricity_cost(total_units_user)
+
+            # ตรวจสอบว่ามีข้อมูลใน Reports สำหรับเดือนนี้แล้วหรือไม่
+            existing_report = db["Reports"].find_one({
+                "userid": userid,
+                "month/year": current_month_year
+            })
+
+            if existing_report:
+                print(f"ข้อมูลสำหรับReport userid: {userid} ในเดือน {current_month_year} ถูกบันทึกแล้ว")
+                continue
+
+            # บันทึกข้อมูลลงในคอลเลกชัน Report
+            db["Reports"].insert_one({
+                "userid": userid,
+                "month/year": datetime.now().strftime("%Y-%m"),  # รูปแบบเดือน/ปี
+                "total_units": round(total_units_user, 2),  # พลังงานรวม (หน่วย: kWh)
+                "total_cost": round(total_cost, 2),  # ค่าไฟรวม (บาท)
+            })
 
     except Exception as e:
         print(f"Failed to save monthly data: {e}")
@@ -224,7 +279,7 @@ def mock_today(mock_date=None):
     return datetime.today()  # ใช้วันที่ปัจจุบันจริง
 
 def is_last_day_of_month():
-    today = mock_today()
+    today = mock_today(datetime(2025, 4, 30))
     tomorrow = today + timedelta(days=1)
     return tomorrow.month != today.month
 print(is_last_day_of_month())  # ผลลัพธ์: True
@@ -243,7 +298,8 @@ def run_scheduler():
         time.sleep(1)
 
 if __name__ == '__main__':
-    # schedule_monthly_task()ใช้ทดสอบเนื่องจากไม่สามารถรันapp.pyได้24/7
+    #ใช้ทดสอบเนื่องจากไม่สามารถรันapp.pyได้24/7
+    schedule_monthly_task()
     #เพื่อไม่ให้ทำงานทับกันเพราะschedule_pendingต้องรันตลอดเวลาเพื่อเช็คเวลาที่จะถึง
     scheduler_thread = Thread(target=run_scheduler) #สร้างThreadสำหรับrun_schedule
     scheduler_thread.daemon = True  #Thread ปิดเมื่อโปรแกรมหลักปิด
