@@ -15,6 +15,8 @@ const deviceRoutes = require('../backend/routes/DeviceRoutes');
 app.use('/api/devices', deviceRoutes);
 const smartplugRoutes = require("../backend/routes/SmartplugRoutes");
 app.use(smartplugRoutes);
+const reportRoutes = require("../backend/routes/ReportRoutes");
+app.use(reportRoutes);
 //Auth
 app.use('/api', authRoutes);
 

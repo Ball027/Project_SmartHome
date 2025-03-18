@@ -6,14 +6,13 @@
 
       <!-- Dropdown เลือกปี -->
       <div class="filter-container">
-        <label for="year">ปี</label>
+        <label for="year">ระบุปีที่ต้องการ</label>
         <select id="year" v-model="selectedYear" @change="fetchReportData">
           <option v-for="year in years" :key="year" :value="year">
             {{ year }}
           </option>
         </select>
       </div>
-
       <!-- กราฟแท่ง -->
       <div class="chart-container">
         <BarChart :chart-data="chartData" />
@@ -37,6 +36,7 @@ export default {
     return {
       selectedYear: new Date().getFullYear(), // เริ่มต้นด้วยปีปัจจุบัน
       years: [], // ปีที่มีข้อมูลในฐานข้อมูล
+      noData: false, // ตรวจสอบว่ามีข้อมูลหรือไม่
       chartData: {
         labels: [
           "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
@@ -44,13 +44,13 @@ export default {
         ], // ชื่อเดือน
         datasets: [
           {
-            label: "พลังงานทั้งหมด (kWh)",
+            label: "พลังงานทั้งหมด (W)",
             backgroundColor: "green",
             data: [], // พลังงานทั้งหมดในแต่ละเดือน
           },
           {
             label: "ค่าใช้จ่าย (บาท)",
-            backgroundColor: "blue",
+            backgroundColor: "red",
             data: [], // ค่าใช้จ่ายในแต่ละเดือน
           },
         ],
@@ -65,8 +65,11 @@ export default {
     // ดึงปีที่มีข้อมูลในฐานข้อมูล
     async fetchYears() {
       try {
-        const response = await axios.get("/api/reports/years");
+        const response = await axios.get("http://localhost:5000/api/reports/years");
         this.years = response.data;
+        if (this.years.length > 0) {
+          this.selectedYear = this.years[0]; // เลือกปีแรกเป็นค่าเริ่มต้น
+        }
       } catch (error) {
         console.error("Failed to fetch years:", error);
       }
@@ -74,8 +77,13 @@ export default {
     // ดึงข้อมูลรายงาน
     async fetchReportData() {
       try {
-        const response = await axios.get(`/api/reports?year=${this.selectedYear}`);
+        const response = await axios.get(`http://localhost:5000/api/reports?year=${this.selectedYear}`);
         const reports = response.data;
+
+        if (reports.length === 0) {
+          this.noData = true; // ไม่มีข้อมูล
+          return;
+        }
 
         // เตรียมข้อมูลสำหรับกราฟ
         const energyData = Array(12).fill(0); // พลังงานทั้งหมดในแต่ละเดือน
@@ -90,6 +98,8 @@ export default {
         // อัปเดตข้อมูลกราฟ
         this.chartData.datasets[0].data = energyData;
         this.chartData.datasets[1].data = costData;
+        console.log(this.chartData.datasets[0].data);
+        console.log(this.chartData.datasets[1].data);
       } catch (error) {
         console.error("Failed to fetch report data:", error);
       }
@@ -125,5 +135,12 @@ export default {
 
 .filter-container {
   margin-bottom: 20px;
+}
+
+.no-data-message {
+  color: red;
+  font-size: 1.2rem;
+  text-align: center;
+  margin-top: 20px;
 }
 </style>
