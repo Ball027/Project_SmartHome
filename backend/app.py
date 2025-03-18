@@ -196,10 +196,28 @@ def save_monthly_data():
                 print(f"No smart plugs found for userid: {userid}")
                 continue
 
-            # คำนวณพลังงานรวมและค่าไฟสำหรับผู้ใช้นี้
-            total_units_user = 0
-            total_cost = 0
+            # ตรวจสอบว่ามีข้อมูลใน Reports สำหรับเดือนนี้แล้วหรือไม่
             current_month_year = datetime.now().strftime("%Y-%m")
+            existing_report = db["Reports"].find_one({
+                "userid": userid,
+                "month/year": current_month_year
+            })
+
+            if existing_report:
+                print(f"ข้อมูลสำหรับ userid: {userid} ในเดือน {current_month_year} ถูกบันทึกแล้ว")
+                continue
+
+            # ตัวแปรเก็บข้อมูลรวม
+            total_energy_user = 0  # พลังงานรวมทั้งเดือน (Wh)
+            total_runtime_user = 0  # เวลาการทำงานรวมทั้งเดือน (ชั่วโมง)
+            total_units_user = 0  # พลังงานรวมทั้งเดือน (kWh)
+            total_cost = 0  # ค่าไฟรวมทั้งเดือน (บาท)
+
+            # พลังงานรวมของแต่ละห้อง
+            livingroom_energy = 0
+            bedroom_energy = 0
+            bathroom_energy = 0
+            kitchen_energy = 0
 
             # เรียก Tapo API สำหรับทุก Smart Plug ของผู้ใช้นี้
             for plug in smart_plugs:
@@ -223,7 +241,7 @@ def save_monthly_data():
                 })
 
                 if existing_power_record:
-                    print(f"ข้อมูลสำหรับPowerRecord {plugname} ในเดือน {current_month_year} ถูกบันทึกแล้ว")
+                    print(f"ข้อมูลสำหรับ {plugname} ในเดือน {current_month_year} ถูกบันทึกแล้ว")
                     continue
 
                 energy_data = asyncio.run(get_energy_data(plugname, _id, plug_type, email, password, ip_address))
@@ -235,7 +253,19 @@ def save_monthly_data():
                 units = (energy_wh / 1000) * runtime_hours  # แปลงเป็น kWh
 
                 # เพิ่มพลังงานรวมของผู้ใช้
+                total_energy_user += energy_wh
+                total_runtime_user += runtime_hours
                 total_units_user += units
+
+                # เพิ่มพลังงานรวมของแต่ละห้อง
+                if room == "Livingroom":
+                    livingroom_energy += energy_wh
+                elif room == "Bedroom":
+                    bedroom_energy += energy_wh
+                elif room == "Bathroom":
+                    bathroom_energy += energy_wh
+                elif room == "Kitchen":
+                    kitchen_energy += energy_wh
 
                 # บันทึกข้อมูลลงในคอลเลกชัน PowerRecords
                 power_records_collection.insert_one({
@@ -243,31 +273,27 @@ def save_monthly_data():
                     "smartplugname": plugname,
                     "userid": userid,
                     "room": room,
-                    "date": datetime.now().strftime("%Y-%m"),  # รูปแบบเดือน/ปี
-                    "total_energy_month": energy_data["total_energy_month"],
-                    "total_runtime_month": energy_data["total_runtime_month"],
-                    "units": units,
+                    "date": current_month_year,  # รูปแบบเดือน/ปี
+                    "total_energy_month": energy_wh,
+                    "total_runtime_month": runtime_hours,
+                    "units": round(units, 2),  # ปัดเศษ units ให้เหลือทศนิยม 2 ตำแหน่ง
                 })
 
             # คำนวณค่าไฟ
             total_cost = calculate_electricity_cost(total_units_user)
 
-            # ตรวจสอบว่ามีข้อมูลใน Reports สำหรับเดือนนี้แล้วหรือไม่
-            existing_report = db["Reports"].find_one({
-                "userid": userid,
-                "month/year": current_month_year
-            })
-
-            if existing_report:
-                print(f"ข้อมูลสำหรับReport userid: {userid} ในเดือน {current_month_year} ถูกบันทึกแล้ว")
-                continue
-
             # บันทึกข้อมูลลงในคอลเลกชัน Report
             db["Reports"].insert_one({
                 "userid": userid,
-                "month/year": datetime.now().strftime("%Y-%m"),  # รูปแบบเดือน/ปี
-                "total_units": round(total_units_user, 2),  # พลังงานรวม (หน่วย: kWh)
-                "total_cost": round(total_cost, 2),  # ค่าไฟรวม (บาท)
+                "month/year": current_month_year,  # รูปแบบเดือน/ปี
+                "total_energy": total_energy_user,  # พลังงานรวมทั้งเดือน (Wh)
+                "total_runtime": total_runtime_user,  # เวลาการทำงานรวมทั้งเดือน (ชั่วโมง)
+                "total_units": round(total_units_user, 2),  # พลังงานรวมทั้งเดือน (kWh)
+                "total_cost": round(total_cost, 2),  # ค่าไฟรวมทั้งเดือน (บาท)
+                "livingroom_energy": livingroom_energy,  # พลังงานรวมของห้อง Living Room (Wh)
+                "bedroom_energy": bedroom_energy,  # พลังงานรวมของห้อง Bedroom (Wh)
+                "bathroom_energy": bathroom_energy,  # พลังงานรวมของห้อง Bathroom (Wh)
+                "kitchen_energy": kitchen_energy,  # พลังงานรวมของห้อง Kitchen (Wh)
             })
 
     except Exception as e:
@@ -279,7 +305,7 @@ def mock_today(mock_date=None):
     return datetime.today()  # ใช้วันที่ปัจจุบันจริง
 
 def is_last_day_of_month():
-    today = mock_today(datetime(2025, 4, 30))
+    today = mock_today() #datetime(2025, 3, 31)
     tomorrow = today + timedelta(days=1)
     return tomorrow.month != today.month
 print(is_last_day_of_month())  # ผลลัพธ์: True
@@ -299,7 +325,7 @@ def run_scheduler():
 
 if __name__ == '__main__':
     #ใช้ทดสอบเนื่องจากไม่สามารถรันapp.pyได้24/7
-    schedule_monthly_task()
+    # schedule_monthly_task()
     #เพื่อไม่ให้ทำงานทับกันเพราะschedule_pendingต้องรันตลอดเวลาเพื่อเช็คเวลาที่จะถึง
     scheduler_thread = Thread(target=run_scheduler) #สร้างThreadสำหรับrun_schedule
     scheduler_thread.daemon = True  #Thread ปิดเมื่อโปรแกรมหลักปิด

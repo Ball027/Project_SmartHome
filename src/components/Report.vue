@@ -1,111 +1,129 @@
 <template>
-    <div class="layout">
-      <Sidebar />
-      <div class="report-container">
-        <h2 class="report-title">รายงานค่าใช้จ่ายที่เกิดขึ้น</h2>
-  
-        <!-- กราฟแท่ง -->
-        <div class="chart-container">
-          <BarChart :chart-data="chartData" />
-        </div>
-  
-        <!-- Dropdown เลือกเดือน -->
-        <div class="filter-container">
-          <label for="month">เดือน</label>
-          <select id="month" v-model="selectedMonth">
-            <option v-for="month in months" :key="month" :value="month">
-              {{ month }}
-            </option>
-          </select>
-        </div>
-  
-        <!-- แสดงข้อมูลพลังงานของแต่ละห้อง -->
-        <div class="room-usage-grid">
-          <div class="room-usage-card" v-for="(usage, room) in roomUsages" :key="room">
-            <span class="room-name">{{ room }}</span>
-            <span class="room-energy">{{ usage }} Kwh</span>
-          </div>
-        </div>
+  <div class="layout">
+    <Sidebar />
+    <div class="report-container">
+      <h2 class="report-title">รายงานค่าใช้จ่ายที่เกิดขึ้น</h2>
+
+      <!-- Dropdown เลือกปี -->
+      <div class="filter-container">
+        <label for="year">ปี</label>
+        <select id="year" v-model="selectedYear" @change="fetchReportData">
+          <option v-for="year in years" :key="year" :value="year">
+            {{ year }}
+          </option>
+        </select>
+      </div>
+
+      <!-- กราฟแท่ง -->
+      <div class="chart-container">
+        <BarChart :chart-data="chartData" />
       </div>
     </div>
-  </template>
-  
-  <script>
-  import Sidebar from "@/components/SidebarMenu.vue";
-  import BarChart from "@/components/BarChart.vue"; // Import component กราฟ
-  
-  export default {
-    name: "ReportPage",
-    components: {
-      Sidebar,
-      BarChart,
+  </div>
+</template>
+
+<script>
+import Sidebar from "@/components/SidebarMenu.vue";
+import BarChart from "@/components/BarChart.vue"; // Import component กราฟ
+import axios from "axios"; // ใช้ Axios ดึงข้อมูลจาก API
+
+export default {
+  name: "ReportPage",
+  components: {
+    Sidebar,
+    BarChart,
+  },
+  data() {
+    return {
+      selectedYear: new Date().getFullYear(), // เริ่มต้นด้วยปีปัจจุบัน
+      years: [], // ปีที่มีข้อมูลในฐานข้อมูล
+      chartData: {
+        labels: [
+          "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+          "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+        ], // ชื่อเดือน
+        datasets: [
+          {
+            label: "พลังงานทั้งหมด (kWh)",
+            backgroundColor: "green",
+            data: [], // พลังงานทั้งหมดในแต่ละเดือน
+          },
+          {
+            label: "ค่าใช้จ่าย (บาท)",
+            backgroundColor: "blue",
+            data: [], // ค่าใช้จ่ายในแต่ละเดือน
+          },
+        ],
+      },
+    };
+  },
+  async created() {
+    await this.fetchYears(); // ดึงปีที่มีข้อมูล
+    await this.fetchReportData(); // ดึงข้อมูลรายงาน
+  },
+  methods: {
+    // ดึงปีที่มีข้อมูลในฐานข้อมูล
+    async fetchYears() {
+      try {
+        const response = await axios.get("/api/reports/years");
+        this.years = response.data;
+      } catch (error) {
+        console.error("Failed to fetch years:", error);
+      }
     },
-    data() {
-      return {
-        selectedMonth: "มกราคม 2567",
-        months: ["มกราคม 2567", "กุมภาพันธ์ 2567", "มีนาคม 2567", "เมษายน 2567"],
-        roomUsages: {
-          "ห้องนั่งเล่น": 50,
-          "ห้องนอน": 50,
-          "ห้องครัว": 50,
-          "ห้องอาบน้ำ": 50,
-        },
-        chartData: {
-          labels: ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย."],
-          datasets: [
-            {
-              label: "ค่าใช้จ่าย (บาท)",
-              backgroundColor: "green",
-              data: [1200, 900, 1100, 500], // ค่าใช้จ่ายแต่ละเดือน
-            },
-          ],
-        },
-      };
+    // ดึงข้อมูลรายงาน
+    async fetchReportData() {
+      try {
+        const response = await axios.get(`/api/reports?year=${this.selectedYear}`);
+        const reports = response.data;
+
+        // เตรียมข้อมูลสำหรับกราฟ
+        const energyData = Array(12).fill(0); // พลังงานทั้งหมดในแต่ละเดือน
+        const costData = Array(12).fill(0); // ค่าใช้จ่ายในแต่ละเดือน
+
+        reports.forEach(report => {
+          const month = parseInt(report["month/year"].split("-")[1]) - 1; // แปลงเดือนเป็น index (0-11)
+          energyData[month] = report.total_energy;
+          costData[month] = report.total_cost;
+        });
+
+        // อัปเดตข้อมูลกราฟ
+        this.chartData.datasets[0].data = energyData;
+        this.chartData.datasets[1].data = costData;
+      } catch (error) {
+        console.error("Failed to fetch report data:", error);
+      }
     },
-  };
-  </script>
-  
-  <style scoped>
-  .layout {
-    display: flex;
-    height: 100vh;
-  }
-  
-  .report-container {
-    flex-grow: 1;
-    padding: 20px;
-    overflow: auto;
-  }
-  
-  .report-title {
-    font-size: 1.5rem;
-    font-weight: bold;
-    margin-bottom: 10px;
-  }
-  
-  .chart-container {
-    background: #ddd;
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-  }
-  
-  .filter-container {
-    margin-bottom: 20px;
-  }
-  
-  .room-usage-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-  }
-  
-  .room-usage-card {
-    background: #f0f0f0;
-    padding: 10px;
-    border-radius: 5px;
-    display: flex;
-    justify-content: space-between;
-  }
-  </style>
-  
+  },
+};
+</script>
+
+<style scoped>
+.layout {
+  display: flex;
+  height: 100vh;
+}
+
+.report-container {
+  flex-grow: 1;
+  padding: 20px;
+  overflow: auto;
+}
+
+.report-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.chart-container {
+  background: #ddd;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.filter-container {
+  margin-bottom: 20px;
+}
+</style>
