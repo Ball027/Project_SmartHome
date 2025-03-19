@@ -54,7 +54,7 @@ export default {
       try {
         const response = await axios.post("http://localhost:5000/api/signup", userData);
         commit("SET_USER", response.data.user);
-        commit("SET_TOKEN", response.data.token);
+        // commit("SET_TOKEN", response.data.token);
         commit("SET_ERROR", null);
         return response;
       } catch (error) {

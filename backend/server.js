@@ -1,7 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const authRoutes = require("./routes/auth");
 const axios = require('axios');
 
 const app = express();
@@ -20,6 +19,7 @@ app.use(smartplugRoutes);
 const reportRoutes = require("../backend/routes/ReportRoutes");
 app.use(reportRoutes);
 //Auth
+const authRoutes = require("./routes/auth");
 app.use('/api', authRoutes);
 
 

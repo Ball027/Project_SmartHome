@@ -30,7 +30,7 @@ router.post("/signup", async (req, res) => {
     const newUser = new User({ username, password: hashedPassword });
     await newUser.save();
 
-    res.json({ message: "สมัครสมาชิกสำเร็จ!" });
+    res.status(201).json({ message: "สมัครสมาชิกสำเร็จ!", user: { id: newUser._id, username: newUser.username } });
   } catch (error) {
     res.status(500).json({ message: "เกิดข้อผิดพลาด", error: error.message });
   }
