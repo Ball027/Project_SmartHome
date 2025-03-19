@@ -11,8 +11,10 @@ app.use(cors());
 // Import Routes
 const userRoutes = require('../backend/routes/UserRoutes');
 app.use(userRoutes);
-const deviceRoutes = require('../backend/routes/DeviceRoutes');
-app.use('/api/devices', deviceRoutes);
+const energyRoutes = require('../backend/routes/EnergyRoutes');
+app.use(energyRoutes);
+// const deviceRoutes = require('../backend/routes/DeviceRoutes');
+// app.use('/api/devices', deviceRoutes);
 const smartplugRoutes = require("../backend/routes/SmartplugRoutes");
 app.use(smartplugRoutes);
 const reportRoutes = require("../backend/routes/ReportRoutes");
@@ -20,7 +22,7 @@ app.use(reportRoutes);
 //Auth
 app.use('/api', authRoutes);
 
-//Tapo API
+
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");

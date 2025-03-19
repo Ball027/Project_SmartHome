@@ -17,6 +17,20 @@
       <div class="chart-container">
         <BarChart :chart-data="chartData" />
       </div>
+      <div class="filter-container">
+        <label for="month">ระบุเดือนที่ต้องการ</label>
+        <select id="month" v-model="selectedMonth" @change="fetchReportData">
+          <option v-for="(month, index) in months" :key="index" :value="index + 1">
+            {{ month }}
+          </option>
+        </select>
+      </div>
+      <div class="room-energy-grid">
+        <div class="room-energy-card" v-for="(energy, room) in currentRoomEnergies" :key="room">
+          <span class="room-name">{{ room }}</span>
+          <span class="room-energy">{{ energy }} W</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -35,8 +49,17 @@ export default {
   data() {
     return {
       selectedYear: new Date().getFullYear(), // เริ่มต้นด้วยปีปัจจุบัน
+      selectedMonth: new Date().getMonth() + 1, // เริ่มต้นด้วยเดือนปัจจุบัน
       years: [], // ปีที่มีข้อมูลในฐานข้อมูล
+      months: [
+        "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+        "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+      ],
       noData: false, // ตรวจสอบว่ามีข้อมูลหรือไม่
+      livingroom_energy: Array(12).fill(0),
+      bedroom_energy: Array(12).fill(0),
+      kitchen_energy: Array(12).fill(0),
+      bathroom_energy: Array(12).fill(0),
       chartData: {
         labels: [
           "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
@@ -88,21 +111,42 @@ export default {
         // เตรียมข้อมูลสำหรับกราฟ
         const energyData = Array(12).fill(0); // พลังงานทั้งหมดในแต่ละเดือน
         const costData = Array(12).fill(0); // ค่าใช้จ่ายในแต่ละเดือน
+        this.livingroom_energy = Array(12).fill(0);
+        this.bedroom_energy = Array(12).fill(0);
+        this.kitchen_energy = Array(12).fill(0);
+        this.bathroom_energy = Array(12).fill(0);
 
         reports.forEach(report => {
           const month = parseInt(report["month/year"].split("-")[1]) - 1; // แปลงเดือนเป็น index (0-11)
-          energyData[month] = report.total_energy;
-          costData[month] = report.total_cost;
+          energyData[month] = report.total_energy || 0;
+          costData[month] = report.total_cost || 0;
+          this.livingroom_energy[month] = report.livingroom_energy || 0;
+          this.bedroom_energy[month] = report.bedroom_energy || 0;
+          this.kitchen_energy[month] = report.kitchen_energy || 0;
+          this.bathroom_energy[month] = report.bathroom_energy || 0;
         });
 
         // อัปเดตข้อมูลกราฟ
         this.chartData.datasets[0].data = energyData;
         this.chartData.datasets[1].data = costData;
-        console.log(this.chartData.datasets[0].data);
-        console.log(this.chartData.datasets[1].data);
+        // console.log("พลังงาน",this.chartData.datasets[0].data);
+        // console.log("ค่าใช้จ่าย", this.chartData.datasets[1].data);
+        // console.log("livingroom_energy", this.livingroom_energy);
       } catch (error) {
         console.error("Failed to fetch report data:", error);
       }
+    },
+  },
+  computed: {
+    // คำนวณพลังงานของแต่ละห้องตามเดือนที่เลือก
+    currentRoomEnergies() {
+      const monthIndex = this.selectedMonth - 1;
+      return {
+        "ห้องนั่งเล่น": this.livingroom_energy[monthIndex] || 0,
+        "ห้องนอน": this.bedroom_energy[monthIndex] || 0,
+        "ห้องครัว": this.kitchen_energy[monthIndex] || 0,
+        "ห้องอาบน้ำ": this.bathroom_energy[monthIndex] || 0,
+      };
     },
   },
 };
@@ -142,5 +186,33 @@ export default {
   font-size: 1.2rem;
   text-align: center;
   margin-top: 20px;
+}
+
+.room-energy-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  /* 2 คอลัมน์ */
+  gap: 10px;
+  /* ระยะห่างระหว่างช่อง */
+  margin-top: 20px;
+}
+
+.room-energy-card {
+  background: #f0f0f0;
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.room-name {
+  font-size: 1.2rem;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.room-energy {
+  font-size: 1.1rem;
+  color: #333;
 }
 </style>

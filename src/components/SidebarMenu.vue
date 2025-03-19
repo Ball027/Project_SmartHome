@@ -8,9 +8,9 @@
         <li><router-link to="/room/Livingroom">ห้องนั่งเล่น</router-link></li>
         <li><router-link to="/room/Bedroom">ห้องนอน</router-link></li>
         <li><router-link to="/room/Kitchen">ห้องครัว</router-link></li>
-        <li><router-link to="/room/Bathroon">ห้องอาบน้ำ</router-link></li>
+        <li><router-link to="/room/Bathroom">ห้องอาบน้ำ</router-link></li>
         <li><router-link to="/report">รายงานค่าใช้จ่าย</router-link></li>
-        <li><router-link to="/notification">แจ้งเตือน</router-link></li>
+        <!-- <li><router-link to="/notification">แจ้งเตือน</router-link></li> -->
       </ul>
     </nav>
     <button class="logout-btn" @click="logout">ออกระบบ</button>
@@ -22,7 +22,7 @@ import axios from 'axios';
 export default {
   data() {
     return {
-      userName: localStorage.getItem("userid"),
+      userName: "",
     }
   },
   name: "SidebarMenu",

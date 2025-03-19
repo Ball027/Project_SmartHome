@@ -1,4 +1,3 @@
-// routes/ReportRoutes.js
 const express = require("express");
 const router = express.Router();
 const { MongoClient } = require("mongodb");
@@ -32,6 +31,10 @@ router.get("/api/reports/", async (req, res) => {
         "month/year": report["month/year"],
         "total_energy": report["total_energy"],
         "total_cost": report["total_cost"],
+        "livingroom_energy": report["livingroom_energy"],
+        "bedroom_energy": report["bedroom_energy"],
+        "kitchen_energy": report["kitchen_energy"],
+        "bathroom_energy": report["bathroom_energy"],
       }));
   
       res.json(result);
