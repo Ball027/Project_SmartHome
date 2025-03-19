@@ -110,6 +110,57 @@ def energy(room, userid):
     except Exception as e:
         return jsonify({"message": "Failed to fetch energy data", "error": str(e)}), 500
 
+#ดึงcurrent_powerของทุกห้อง
+@app.route('/api/current-power/<userid>', methods=['GET'])
+def get_current_power_by_room(userid):
+    try:
+        print(f"Received userid: {userid}")  # แสดงค่า userid
+        object_userid = ObjectId(userid)
+
+        # ดึงข้อมูล Smart Plugs จาก MongoDB
+        smart_plugs = list(collection.find(
+            {"userid": object_userid},
+            {"_id": 1, "smartplugname": 1, "email": 1, "password": 1, "ipAddress": 1, "type": 1, "room": 1}
+        ))
+
+        if not smart_plugs:
+            return jsonify({"message": "No smart plugs found in database"}), 404
+
+        # ตัวแปรเก็บผลลัพธ์
+        room_power = {
+            "Livingroom": 0,  # ห้องนั่งเล่น
+            "Bedroom": 0,     # ห้องนอน
+            "Kitchen": 0,      # ห้องครัว
+            "Bathroom": 0,     # ห้องน้ำ
+        }
+
+        # เรียก Tapo API สำหรับทุก Smart Plug
+        for plug in smart_plugs:
+            plugname = plug.get("smartplugname")
+            _id = plug.get("_id")
+            email = plug.get("email")
+            password = plug.get("password")
+            ip_address = plug.get("ipAddress")
+            room = plug.get("room")  # ดึงชื่อห้อง
+            plug_type = plug.get("type")  # ดึงชนิดของ plug
+
+            # ตรวจสอบว่าข้อมูลครบถ้วน
+            if not all([email, password, ip_address, plug_type]):
+                print(f"Missing credentials, IP address, or plug type for {plugname}")
+                continue
+
+            # ดึงข้อมูล current_power
+            energy_data = asyncio.run(get_energy_data(plugname, _id, plug_type, email, password, ip_address))
+            current_power = energy_data.get("current_power", 0)
+
+            # เพิ่ม current_power ไปยังห้องที่เกี่ยวข้อง
+            if room in room_power:
+                room_power[room] += current_power
+
+        return jsonify(room_power)
+    except Exception as e:
+        return jsonify({"message": "Failed to fetch current power data", "error": str(e)}), 500
+
 #ควบคุมการ On/Off Smartplug
 @app.route('/api/toggle-plug/<device_id>', methods=['PUT'])
 async def toggle_plug(device_id):
@@ -156,9 +207,7 @@ async def toggle_plug(device_id):
 
 #คำนวนค่าไฟประจำเดือน
 def calculate_electricity_cost(total_units):
-    """
-    คำนวณค่าไฟตามอัตราก้าวหน้าของการไฟฟ้าฝ่ายผลิตแห่งประเทศไทย (กฟผ.)
-    """
+    """คำนวณค่าไฟตามอัตราก้าวหน้าของการไฟฟ้าฝ่ายผลิตแห่งประเทศไทย (กฟผ.)"""
     if total_units <= 15:
         return total_units * 2.3488
     elif total_units <= 25:

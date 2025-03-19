@@ -9,19 +9,19 @@
       <div class="power-grid">
         <div class="power-card">
           <span class="power-label">ห้องนั่งเล่น</span>
-          <span class="power-value">{{ currentPower.livingRoom }} W</span>
+          <span class="power-value">{{ roomPowers.Livingroom }} W</span>
         </div>
         <div class="power-card">
           <span class="power-label">ห้องนอน</span>
-          <span class="power-value">{{ currentPower.bedroom }} W</span>
+          <span class="power-value">{{ roomPowers.Bedroom }} W</span>
         </div>
         <div class="power-card">
           <span class="power-label">ห้องครัว</span>
-          <span class="power-value">{{ currentPower.kitchen }} W</span>
+          <span class="power-value">{{ roomPowers.Kitchen }} W</span>
         </div>
         <div class="power-card">
           <span class="power-label">ห้องน้ำ</span>
-          <span class="power-value">{{ currentPower.bathroom }} W</span>
+          <span class="power-value">{{ roomPowers.Bathroom }} W</span>
         </div>
       </div>
 
@@ -37,7 +37,7 @@
 
 <script>
 import Sidebar from "@/components/SidebarMenu.vue";
-
+import axios from "axios";
 export default {
   name: "DashboardPage",
   components: {
@@ -45,13 +45,36 @@ export default {
   },
   data() {
     return {
-      currentPower: {
-        livingRoom: 20, // พลังงานห้องนั่งเล่น (หน่วย: W)
-        bedroom: 15,    // พลังงานห้องนอน (หน่วย: W)
-        kitchen: 10,    // พลังงานห้องครัว (หน่วย: W)
-        bathroom: 5,    // พลังงานห้องน้ำ (หน่วย: W)
+      roomPowers: {
+        Livingroom: 0,  // ห้องนั่งเล่น
+        Bedroom: 0,     // ห้องนอน
+        Kitchen: 0,     // ห้องครัว
+        Bathroom: 0,    // ห้องน้ำ
       },
+      userid: localStorage.getItem("userid"),
+      interval: null,
     };
+  },
+  methods: {
+    async fetchCurrentPower() {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/current-power/${this.userid}`);
+        this.roomPowers = response.data;
+      } catch (error) {
+        console.error("Failed to fetch current power:", error);
+      }
+    },
+  },
+  mounted() {
+    this.fetchCurrentPower();
+    this.interval = setInterval(() => {
+      this.fetchCurrentPower();
+    }, 10000);
+  },
+  beforeUnmount() {
+    if (this.interval) {
+      clearInterval(this.interval);
+    }
   },
 };
 </script>
@@ -90,8 +113,10 @@ export default {
 
 .power-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 4 ส่วนใน 1 แถว */
-  gap: 10px; /* ระยะห่างระหว่างส่วน */
+  grid-template-columns: repeat(4, 1fr);
+  /* 4 ส่วนใน 1 แถว */
+  gap: 10px;
+  /* ระยะห่างระหว่างส่วน */
   margin-bottom: 20px;
 }
 

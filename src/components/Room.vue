@@ -150,10 +150,6 @@ export default {
         device.status = status;
       }
     },
-    // closeDeleteModal() {
-    //   this.showDeleteModal = false;
-    //   this.selectedDevice = null;
-    // },
     async deleteDevice(deviceId) {
       try {
         const response = await axios.delete(
@@ -171,7 +167,7 @@ export default {
     this.fetchEnergy();
     this.interval = setInterval(() => {
       this.fetchEnergy();
-    }, 60000);
+    }, 10000);
   },
   beforeUnmount() {
     if (this.interval) {
