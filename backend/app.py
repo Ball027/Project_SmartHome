@@ -50,7 +50,7 @@ async def get_energy_data(plugname, _id, plug_type, email, password, ip_address)
             "current_power": current_power.to_dict().get("current_power", 0),  # พลังงานปัจจุบัน วัตต์ (W)
             "today_energy": today_energy,  # พลังงานที่ใช้วันนี้ วัตต์-ชั่วโมง (Wh)
             "today_runtime": today_runtime_hours,  # เวลาที่ใช้วันนี้ ชั่วโมง
-            "total_energy_month": energy_usage.to_dict().get("month_energy", 0),
+            "total_energy_month": energy_usage.to_dict().get("month_energy", 0), # พลังงานที่ใช้เดือนนี้ วัตต์-ชั่วโมง (Wh)
             "total_runtime_month": math.floor(energy_usage.to_dict().get("month_runtime", 0) / 60),  # เวลาที่ใช้ในเดือนนี้ ชั่วโมง
             "status": True,
         }
@@ -299,7 +299,7 @@ def save_monthly_data():
                 # คำนวณพลังงานรวม (kWh)
                 energy_wh = energy_data["total_energy_month"]  # พลังงานในหน่วย Wh
                 runtime_hours = energy_data["total_runtime_month"]  # เวลาในหน่วยชั่วโมง
-                units = (energy_wh / 1000) * runtime_hours  # แปลงเป็น kWh
+                units = (energy_wh / 1000)  # แปลงเป็น kWh
 
                 # เพิ่มพลังงานรวมของผู้ใช้
                 total_energy_user += energy_wh
@@ -374,7 +374,7 @@ def run_scheduler():
 
 if __name__ == '__main__':
     #ใช้ทดสอบเนื่องจากไม่สามารถรันapp.pyได้24/7
-    # schedule_monthly_task()
+    schedule_monthly_task()
     #เพื่อไม่ให้ทำงานทับกันเพราะschedule_pendingต้องรันตลอดเวลาเพื่อเช็คเวลาที่จะถึง
     scheduler_thread = Thread(target=run_scheduler) #สร้างThreadสำหรับrun_schedule
     scheduler_thread.daemon = True  #Thread ปิดเมื่อโปรแกรมหลักปิด
