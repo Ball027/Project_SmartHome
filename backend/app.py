@@ -208,20 +208,12 @@ async def toggle_plug(device_id):
 #คำนวนค่าไฟประจำเดือน
 def calculate_electricity_cost(total_units):
     """คำนวณค่าไฟตามอัตราก้าวหน้าของการไฟฟ้าฝ่ายผลิตแห่งประเทศไทย (กฟผ.)"""
-    if total_units <= 15:
-        return total_units * 2.3488
-    elif total_units <= 25:
-        return (15 * 2.3488) + ((total_units - 15) * 2.9882)
-    elif total_units <= 35:
-        return (15 * 2.3488) + (10 * 2.9882) + ((total_units - 25) * 3.2405)
-    elif total_units <= 100:
-        return (15 * 2.3488) + (10 * 2.9882) + (10 * 3.2405) + ((total_units - 35) * 3.6237)
-    elif total_units <= 150:
-        return (15 * 2.3488) + (10 * 2.9882) + (10 * 3.2405) + (65 * 3.6237) + ((total_units - 100) * 3.7171)
+    if total_units <= 150:
+        return total_units * 3.2484
     elif total_units <= 400:
-        return (15 * 2.3488) + (10 * 2.9882) + (10 * 3.2405) + (65 * 3.6237) + (50 * 3.7171) + ((total_units - 150) * 4.2218)
+        return (150 * 3.2484) + ((total_units - 150) * 4.2218)
     else:
-        return (15 * 2.3488) + (10 * 2.9882) + (10 * 3.2405) + (65 * 3.6237) + (50 * 3.7171) + (250 * 4.2218) + ((total_units - 400) * 4.4217)
+        return (150 * 3.2484) + (250 * 4.2218) + ((total_units - 400) * 4.4217)
 
 def save_monthly_data():
     print("กำลังบันทึกข้อมูลทุกสิ้นเดือน...")
