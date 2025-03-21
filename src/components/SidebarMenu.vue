@@ -4,7 +4,7 @@
     <p class="user-role">{{ currentDate }}</p>
     <nav class="menu">
       <ul>
-        <li><router-link to="/dashboard">พลังงานโดยรวม</router-link></li>
+        <li><router-link to="/main">พลังงานโดยรวม</router-link></li>
         <li><router-link to="/room/Livingroom">ห้องนั่งเล่น</router-link></li>
         <li><router-link to="/room/Bedroom">ห้องนอน</router-link></li>
         <li><router-link to="/room/Kitchen">ห้องครัว</router-link></li>

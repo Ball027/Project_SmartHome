@@ -3,7 +3,7 @@
     <div class="device-card">
       <div class="device-info">
         <h3>{{ device.plugname }}</h3>
-        <p>พลังงานไฟฟ้า: {{ device.current_power }} W</p>
+        <p>กำลังไฟฟ้า: {{ device.current_power }} W</p>
         <p>เวลาที่ใช้: {{ device.today_runtime }} ชม.</p>
       </div>
       <div class="device-actions">
@@ -19,7 +19,8 @@
     <div v-if="showModal" class="modal-overlay">
       <div class="modal-content">
         <h2>ยืนยันการลบ</h2>
-        <p>คุณแน่ใจหรือไม่ว่าต้องการลบ <strong>{{ device.plugname }}</strong>?</p>
+        <p>คุณแน่ใจหรือไม่ว่าต้องการลบ</p>
+        <strong>{{ device.plugname }}</strong>
         <div class="modal-buttons">
           <button @click="deleteDevice" class="confirm-button">ยืนยัน</button>
           <button @click="showModal = false" class="cancel-button">ยกเลิก</button>
@@ -183,6 +184,7 @@ input:checked+.slider:before {
   display: flex;
   justify-content: center;
   gap: 10px;
+  padding: 10px;
 }
 
 .confirm-button {

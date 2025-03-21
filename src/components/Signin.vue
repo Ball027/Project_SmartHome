@@ -51,7 +51,7 @@ export default {
         });
 
         if (response) {
-          router.push("/dashboard");
+          router.push("/main");
         }
       } catch (err) {
         const errorMessage = err.message || "การเข้าสู่ระบบล้มเหลว กรุณาลองอีกครั้ง";

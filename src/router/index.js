@@ -16,7 +16,7 @@ const routes = [
     component: Register 
   },
   { 
-    path: '/dashboard', 
+    path: '/main', 
     name: 'Dashboard', 
     component: EnergyDashboard,
     meta: { requiresAuth: true }

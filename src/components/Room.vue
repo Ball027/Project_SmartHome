@@ -5,7 +5,7 @@
 
     <!-- Main Content -->
     <main class="content">
-      <h1 class="title">{{ this.room }}</h1>
+      <h1 class="title">{{ RoomName }}</h1>
       <button @click="openModal" class="add-device-btn">เพิ่มอุปกรณ์ +</button>
 
       <!-- Modal เพิ่มอุปกรณ์ -->
@@ -17,9 +17,9 @@
           </div>
           <div class="modal-body">
             <input type="text" placeholder="ชื่อ Smart Plug" v-model="smartplugname" required />
-            <input type="email" placeholder="อีเมล" v-model="email" required />
+            <input type="email" placeholder="อีเมล บน Tapo App" v-model="email" required />
             <input type="password" placeholder="รหัสผ่าน" v-model="password" required />
-            <input type="text" placeholder="ที่อยู่ IP" v-model="ipAddress" required />
+            <input type="text" placeholder="IP Address SmartPlug" v-model="ipAddress" required />
 
             <!-- เพิ่ม Dropdown สำหรับเลือกชนิดของ plug -->
             <select v-model="selectedPlugType" required>
@@ -68,7 +68,18 @@ export default {
       smartplugname: "",
       selectedPlugType: "", // เพิ่ม property นี้
       interval: null,
+      roomMapping:{
+        "Livingroom": "ห้องนั่งเล่น",
+        "Bedroom": "ห้องนอน",
+        "Kitchen": "ห้องครัว",
+        "Bathroom": "ห้องอาบน้ำ",
+      }
     };
+  },
+  computed: {
+    RoomName() {
+      return this.roomMapping[this.room]; 
+    },
   },
   watch: {
     "$route.params.room": {

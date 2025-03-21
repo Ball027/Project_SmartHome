@@ -2,7 +2,6 @@
   <div class="dashboard-container">
     <!-- เรียกใช้ Sidebar -->
     <Sidebar />
-
     <!-- ส่วนเนื้อหาหลัก -->
     <div class="content">
       <!-- แสดง currentPower ของทั้ง 4 ห้อง -->
@@ -23,13 +22,6 @@
           <span class="power-label">ห้องน้ำ</span>
           <span class="power-value">{{ roomPowers.Bathroom }} W</span>
         </div>
-      </div>
-
-      <div class="info-box">
-        <h3>5 ทริคการประหยัดพลังงาน!!</h3>
-      </div>
-      <div class="info-box">
-        <h3>โซลาร์เซลล์คุ้มค่าจริงหรือไม่?</h3>
       </div>
     </div>
   </div>
@@ -113,38 +105,34 @@ export default {
 
 .power-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  /* 4 ส่วนใน 1 แถว */
-  gap: 10px;
-  /* ระยะห่างระหว่างส่วน */
+  grid-template-columns: repeat(2, 1fr); /* 2 คอลัมน์ */
+  grid-template-rows: repeat(2, 1fr);    /* 2 แถว */
+  gap: 20px; /* ระยะห่างระหว่างส่วน */
+  width: 70%; /* ความกว้าง 70% */
+  margin: 0 auto; /* จัดให้อยู่กึ่งกลาง */
   margin-bottom: 20px;
 }
 
 .power-card {
   background: white;
-  padding: 15px;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  padding: 20px; /* เพิ่ม padding เพื่อให้ขนาดใหญ่ขึ้น */
+  border-radius: 10px; /* ปรับขอบมน */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* เพิ่มเงา */
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .power-label {
-  font-size: 1rem;
+  font-size: 1.2rem; /* ปรับขนาดตัวอักษร */
   font-weight: bold;
-  display: block;
-  margin-bottom: 5px;
+  margin-bottom: 10px; /* เพิ่มระยะห่าง */
 }
 
 .power-value {
-  font-size: 1.1rem;
+  font-size: 1.5rem; /* ปรับขนาดตัวอักษร */
   color: #333;
-}
-
-.info-box {
-  background: white;
-  padding: 15px;
-  margin: 10px 0;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 </style>

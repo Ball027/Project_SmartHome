@@ -191,9 +191,7 @@ export default {
 .room-energy-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  /* 2 คอลัมน์ */
   gap: 10px;
-  /* ระยะห่างระหว่างช่อง */
   margin-top: 20px;
 }
 
