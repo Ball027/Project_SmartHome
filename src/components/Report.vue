@@ -28,7 +28,7 @@
       <div class="room-energy-grid">
         <div class="room-energy-card" v-for="(energy, room) in currentRoomEnergies" :key="room">
           <span class="room-name">{{ room }}</span>
-          <span class="room-energy">{{ energy }} W</span>
+          <span class="room-energy">{{ energy }} Wh</span>
         </div>
       </div>
     </div>
@@ -67,7 +67,7 @@ export default {
         ], // ชื่อเดือน
         datasets: [
           {
-            label: "พลังงานทั้งหมด (W)",
+            label: "พลังงานทั้งหมด (Wh)",
             backgroundColor: "green",
             data: [], // พลังงานทั้งหมดในแต่ละเดือน
           },
