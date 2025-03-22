@@ -26,9 +26,15 @@
         </select>
       </div>
       <div class="room-energy-grid">
-        <div class="room-energy-card" v-for="(energy, room) in currentRoomEnergies" :key="room">
+        <div
+          class="room-energy-card"
+          v-for="(energy, room) in currentRoomEnergies"
+          :key="room"
+        >
           <span class="room-name">{{ room }}</span>
-          <span class="room-energy">{{ energy }} Wh</span>
+          <span class="room-energy" :class="roomEnergyFontClasses[room]">
+            {{ energy }} Wh
+          </span>
         </div>
       </div>
     </div>
@@ -37,8 +43,8 @@
 
 <script>
 import Sidebar from "@/components/SidebarMenu.vue";
-import BarChart from "@/components/BarChart.vue"; // Import component กราฟ
-import axios from "axios"; // ใช้ Axios ดึงข้อมูลจาก API
+import BarChart from "@/components/BarChart.vue";
+import axios from "axios";
 
 export default {
   name: "ReportPage",
@@ -48,14 +54,14 @@ export default {
   },
   data() {
     return {
-      selectedYear: new Date().getFullYear(), // เริ่มต้นด้วยปีปัจจุบัน
-      selectedMonth: new Date().getMonth() + 1, // เริ่มต้นด้วยเดือนปัจจุบัน
-      years: [], // ปีที่มีข้อมูลในฐานข้อมูล
+      selectedYear: new Date().getFullYear(),
+      selectedMonth: new Date().getMonth() + 1,
+      years: [],
       months: [
         "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
         "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
       ],
-      noData: false, // ตรวจสอบว่ามีข้อมูลหรือไม่
+      noData: false,
       livingroom_energy: Array(12).fill(0),
       bedroom_energy: Array(12).fill(0),
       kitchen_energy: Array(12).fill(0),
@@ -64,60 +70,57 @@ export default {
         labels: [
           "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
           "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
-        ], // ชื่อเดือน
+        ],
         datasets: [
           {
             label: "พลังงานทั้งหมด (Wh)",
             backgroundColor: "green",
-            data: [], // พลังงานทั้งหมดในแต่ละเดือน
+            data: [],
           },
           {
             label: "ค่าใช้จ่าย (บาท)",
             backgroundColor: "red",
-            data: [], // ค่าใช้จ่ายในแต่ละเดือน
+            data: [],
           },
         ],
       },
     };
   },
   async created() {
-    await this.fetchYears(); // ดึงปีที่มีข้อมูล
-    await this.fetchReportData(); // ดึงข้อมูลรายงาน
+    await this.fetchYears();
+    await this.fetchReportData();
   },
   methods: {
-    // ดึงปีที่มีข้อมูลในฐานข้อมูล
     async fetchYears() {
       try {
         const response = await axios.get("http://localhost:5000/api/reports/years");
         this.years = response.data;
         if (this.years.length > 0) {
-          this.selectedYear = this.years[0]; // เลือกปีแรกเป็นค่าเริ่มต้น
+          this.selectedYear = this.years[0];
         }
       } catch (error) {
         console.error("Failed to fetch years:", error);
       }
     },
-    // ดึงข้อมูลรายงาน
     async fetchReportData() {
       try {
         const response = await axios.get(`http://localhost:5000/api/reports?year=${this.selectedYear}`);
         const reports = response.data;
 
         if (reports.length === 0) {
-          this.noData = true; // ไม่มีข้อมูล
+          this.noData = true;
           return;
         }
 
-        // เตรียมข้อมูลสำหรับกราฟ
-        const energyData = Array(12).fill(0); // พลังงานทั้งหมดในแต่ละเดือน
-        const costData = Array(12).fill(0); // ค่าใช้จ่ายในแต่ละเดือน
+        const energyData = Array(12).fill(0);
+        const costData = Array(12).fill(0);
         this.livingroom_energy = Array(12).fill(0);
         this.bedroom_energy = Array(12).fill(0);
         this.kitchen_energy = Array(12).fill(0);
         this.bathroom_energy = Array(12).fill(0);
 
         reports.forEach(report => {
-          const month = parseInt(report["month/year"].split("-")[1]) - 1; // แปลงเดือนเป็น index (0-11)
+          const month = parseInt(report["month/year"].split("-")[1]) - 1;
           energyData[month] = report.total_energy || 0;
           costData[month] = report.total_cost || 0;
           this.livingroom_energy[month] = report.livingroom_energy || 0;
@@ -126,19 +129,27 @@ export default {
           this.bathroom_energy[month] = report.bathroom_energy || 0;
         });
 
-        // อัปเดตข้อมูลกราฟ
         this.chartData.datasets[0].data = energyData;
         this.chartData.datasets[1].data = costData;
-        // console.log("พลังงาน",this.chartData.datasets[0].data);
-        // console.log("ค่าใช้จ่าย", this.chartData.datasets[1].data);
-        // console.log("livingroom_energy", this.livingroom_energy);
       } catch (error) {
         console.error("Failed to fetch report data:", error);
       }
     },
+    calculateEnergyPercentage(energy, totalEnergy) {
+      return totalEnergy === 0 ? 0 : (energy / totalEnergy) * 100;
+    },
+    getEnergyFontClass(energy, totalEnergy) {
+      const percentage = this.calculateEnergyPercentage(energy, totalEnergy);
+      if (percentage >= 50) {
+        return "high-energy-font";
+      } else if (percentage <= 25) {
+        return "low-energy-font";
+      } else {
+        return "medium-energy-font";
+      }
+    },
   },
   computed: {
-    // คำนวณพลังงานของแต่ละห้องตามเดือนที่เลือก
     currentRoomEnergies() {
       const monthIndex = this.selectedMonth - 1;
       return {
@@ -146,6 +157,16 @@ export default {
         "ห้องนอน": this.bedroom_energy[monthIndex] || 0,
         "ห้องครัว": this.kitchen_energy[monthIndex] || 0,
         "ห้องอาบน้ำ": this.bathroom_energy[monthIndex] || 0,
+      };
+    },
+    roomEnergyFontClasses() {
+      const monthIndex = this.selectedMonth - 1;
+      const totalEnergy = this.chartData.datasets[0].data[monthIndex] || 0; // พลังงานทั้งหมดของเดือนนั้น
+      return {
+        "ห้องนั่งเล่น": this.getEnergyFontClass(this.livingroom_energy[monthIndex], totalEnergy),
+        "ห้องนอน": this.getEnergyFontClass(this.bedroom_energy[monthIndex], totalEnergy),
+        "ห้องครัว": this.getEnergyFontClass(this.kitchen_energy[monthIndex], totalEnergy),
+        "ห้องอาบน้ำ": this.getEnergyFontClass(this.bathroom_energy[monthIndex], totalEnergy),
       };
     },
   },
@@ -202,6 +223,18 @@ export default {
   text-align: center;
 }
 
+.high-energy-font {
+  color: red; /* สีแดง */
+}
+
+.medium-energy-font {
+  color: orange; /* สีเหลือง */
+}
+
+.low-energy-font {
+  color: green; /* สีเขียว */
+}
+
 .room-name {
   font-size: 1.2rem;
   font-weight: bold;
@@ -211,6 +244,6 @@ export default {
 
 .room-energy {
   font-size: 1.1rem;
-  color: #333;
+  font-weight: bold; /* ทำให้ตัวเลขเด่นขึ้น */
 }
 </style>
