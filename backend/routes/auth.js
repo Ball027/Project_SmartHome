@@ -15,8 +15,8 @@ router.post("/signup", async (req, res) => {
       return res.status(400).json({ message: "กรุณากรอกชื่อผู้ใช้และรหัสผ่าน" });
     }
 
-    if (username.length < 3 || password.length < 6) {
-      return res.status(400).json({ message: "ชื่อผู้ใช้ต้องมีความยาวอย่างน้อย 3 ตัวอักษร และรหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร" });
+    if (username.length < 6 || password.length < 6) {
+      return res.status(400).json({ message: "ชื่อผู้ใช้และรหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร" });
     }
 
     // เช็คว่ามี username นี้อยู่แล้วหรือยัง

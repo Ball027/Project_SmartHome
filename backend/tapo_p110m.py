@@ -18,19 +18,10 @@ async def main():
     client = ApiClient(tapo_username, tapo_password)
     device = await client.p110(ip_address)
     
-    
-    
     print("Turning device on...")
     await device.on()
     
-
     print("-----------------------------------------------------")
-
-    # device_info = await device.get_device_info()
-    # print(f"Device info: {device_info.to_dict()}")
-
-    # device_usage = await device.get_device_usage()
-    # print(f"Device usage: {device_usage.to_dict()}")
 
     current_power = await device.get_current_power()
     print(f"Current power: {current_power.to_dict()}")

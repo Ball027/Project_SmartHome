@@ -36,8 +36,8 @@ export default {
     const isLoading = ref(false);
 
     const signup = async () => {
-      if (username.value.length < 3 || password.value.length < 6) {
-        alert("ชื่อผู้ใช้ต้องมีความยาวอย่างน้อย 3 ตัวอักษร และรหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
+      if (username.value.length < 6 || password.value.length < 6) {
+        alert("ชื่อผู้ใช้และรหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
         return;
       }
 
