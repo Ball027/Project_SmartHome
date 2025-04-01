@@ -1,0 +1,238 @@
+[{
+  "_id": {
+    "$oid": "67d987aee68906c2c957d576"
+  },
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "month/year": "2025-02",
+  "total_energy": 528,
+  "total_runtime": 153,
+  "total_units": 26.93,
+  "total_cost": 50.12,
+  "livingroom_energy": 352,
+  "bedroom_energy": 176,
+  "bathroom_energy": 0,
+  "kitchen_energy": 0
+},
+{
+  "_id": {
+    "$oid": "67d9901be68906c2c957d577"
+  },
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "month/year": "2024-01",
+  "total_energy": 100,
+  "total_runtime": 153,
+  "total_units": 26.93,
+  "total_cost": 50,
+  "livingroom_energy": 50,
+  "bedroom_energy": 50,
+  "bathroom_energy": 0,
+  "kitchen_energy": 0
+},
+{
+  "_id": {
+    "$oid": "67d9902fe68906c2c957d578"
+  },
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "month/year": "2024-02",
+  "total_energy": 150,
+  "total_runtime": 153,
+  "total_units": 26.93,
+  "total_cost": 55,
+  "livingroom_energy": 100,
+  "bedroom_energy": 50,
+  "bathroom_energy": 0,
+  "kitchen_energy": 0
+},
+{
+  "_id": {
+    "$oid": "67d99043e68906c2c957d579"
+  },
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "month/year": "2024-03",
+  "total_energy": 154,
+  "total_runtime": 153,
+  "total_units": 26.93,
+  "total_cost": 60,
+  "livingroom_energy": 74,
+  "bedroom_energy": 80,
+  "bathroom_energy": 0,
+  "kitchen_energy": 0
+},
+{
+  "_id": {
+    "$oid": "67d99054e68906c2c957d57a"
+  },
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "month/year": "2024-04",
+  "total_energy": 170,
+  "total_runtime": 153,
+  "total_units": 26.93,
+  "total_cost": 65,
+  "livingroom_energy": 100,
+  "bedroom_energy": 70,
+  "bathroom_energy": 0,
+  "kitchen_energy": 0
+},
+{
+  "_id": {
+    "$oid": "67d9906ae68906c2c957d57b"
+  },
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "month/year": "2024-05",
+  "total_energy": 175,
+  "total_runtime": 153,
+  "total_units": 26.93,
+  "total_cost": 70,
+  "livingroom_energy": 120,
+  "bedroom_energy": 55,
+  "bathroom_energy": 0,
+  "kitchen_energy": 0
+},
+{
+  "_id": {
+    "$oid": "67d9907fe68906c2c957d57c"
+  },
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "month/year": "2024-06",
+  "total_energy": 130,
+  "total_runtime": 153,
+  "total_units": 26.93,
+  "total_cost": 40,
+  "livingroom_energy": 95,
+  "bedroom_energy": 35,
+  "bathroom_energy": 0,
+  "kitchen_energy": 0
+},
+{
+  "_id": {
+    "$oid": "67d99097e68906c2c957d57d"
+  },
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "month/year": "2024-07",
+  "total_energy": 250,
+  "total_runtime": 153,
+  "total_units": 26.93,
+  "total_cost": 120,
+  "livingroom_energy": 100,
+  "bedroom_energy": 50,
+  "bathroom_energy": 50,
+  "kitchen_energy": 50
+},
+{
+  "_id": {
+    "$oid": "67d990a9e68906c2c957d57e"
+  },
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "month/year": "2024-08",
+  "total_energy": 132,
+  "total_runtime": 153,
+  "total_units": 26.93,
+  "total_cost": 80,
+  "livingroom_energy": 50,
+  "bedroom_energy": 50,
+  "bathroom_energy": 32,
+  "kitchen_energy": 0
+},
+{
+  "_id": {
+    "$oid": "67d990d6e68906c2c957d57f"
+  },
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "month/year": "2024-09",
+  "total_energy": 100,
+  "total_runtime": 153,
+  "total_units": 26.93,
+  "total_cost": 50,
+  "livingroom_energy": 50,
+  "bedroom_energy": 50,
+  "bathroom_energy": 0,
+  "kitchen_energy": 0
+},
+{
+  "_id": {
+    "$oid": "67d990e2e68906c2c957d580"
+  },
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "month/year": "2024-10",
+  "total_energy": 100,
+  "total_runtime": 153,
+  "total_units": 26.93,
+  "total_cost": 50,
+  "livingroom_energy": 50,
+  "bedroom_energy": 25,
+  "bathroom_energy": 25,
+  "kitchen_energy": 0
+},
+{
+  "_id": {
+    "$oid": "67d990f5e68906c2c957d581"
+  },
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "month/year": "2024-11",
+  "total_energy": 100,
+  "total_runtime": 153,
+  "total_units": 26.93,
+  "total_cost": 50,
+  "livingroom_energy": 50,
+  "bedroom_energy": 30,
+  "bathroom_energy": 20,
+  "kitchen_energy": 0
+},
+{
+  "_id": {
+    "$oid": "67d99102e68906c2c957d582"
+  },
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "month/year": "2024-12",
+  "total_energy": 100,
+  "total_runtime": 153,
+  "total_units": 26.93,
+  "total_cost": 50,
+  "livingroom_energy": 50,
+  "bedroom_energy": 50,
+  "bathroom_energy": 0,
+  "kitchen_energy": 0
+},
+{
+  "_id": {
+    "$oid": "67eac9d6a8671f94319aabe0"
+  },
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "month/year": "2025-03",
+  "total_energy": 1388,
+  "total_runtime": 360,
+  "total_units": 1.39,
+  "total_cost": 4.51,
+  "livingroom_energy": 347,
+  "bedroom_energy": 347,
+  "bathroom_energy": 347,
+  "kitchen_energy": 347
+}]

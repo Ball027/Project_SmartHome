@@ -1,0 +1,68 @@
+[{
+  "_id": {
+    "$oid": "67eac9d5a8671f94319aabdc"
+  },
+  "smartplugid": {
+    "$oid": "67d181351e56b3022aff899e"
+  },
+  "smartplugname": "Real tapo p110",
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "room": "Livingroom",
+  "date": "2025-03",
+  "total_energy_month": 347,
+  "total_runtime_month": 90,
+  "units": 0.35
+},
+{
+  "_id": {
+    "$oid": "67eac9d5a8671f94319aabdd"
+  },
+  "smartplugid": {
+    "$oid": "67d43041f0573ff365058e9b"
+  },
+  "smartplugname": "clone tapo p110 bedroom",
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "room": "Bedroom",
+  "date": "2025-03",
+  "total_energy_month": 347,
+  "total_runtime_month": 90,
+  "units": 0.35
+},
+{
+  "_id": {
+    "$oid": "67eac9d6a8671f94319aabde"
+  },
+  "smartplugid": {
+    "$oid": "67d983cfe68906c2c957d56a"
+  },
+  "smartplugname": "Clone tapo p110 bathroom",
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "room": "Bathroom",
+  "date": "2025-03",
+  "total_energy_month": 347,
+  "total_runtime_month": 90,
+  "units": 0.35
+},
+{
+  "_id": {
+    "$oid": "67eac9d6a8671f94319aabdf"
+  },
+  "smartplugid": {
+    "$oid": "67da9cdb9b7f2642f9608f27"
+  },
+  "smartplugname": "Clone P110 Kitchen",
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "room": "Kitchen",
+  "date": "2025-03",
+  "total_energy_month": 347,
+  "total_runtime_month": 90,
+  "units": 0.35
+}]

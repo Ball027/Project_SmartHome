@@ -44,12 +44,12 @@ app.get('/api/energy/:room/:userid', async (req, res) => {
 });
 
 // เชื่อมต่อ MongoDB ชื่อdatabase[SmartHome]
-// mongoose.connect('mongodb://localhost:27017/SmartHome', {
-//   useNewUrlParser: true,
-//   useUnifiedTopology: true
-// })
-// .then(() => console.log('✅ MongoDB Connected!'))
-// .catch(err => console.error('❌ MongoDB Connection Error:', err));
+mongoose.connect('mongodb://localhost:27017/SmartHome', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => console.log('✅ MongoDB Connected!'))
+.catch(err => console.error('❌ MongoDB Connection Error:', err));
 
 //Deploy
 mongoose.connect(process.env.MONGO_URI, {

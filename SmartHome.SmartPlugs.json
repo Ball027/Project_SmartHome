@@ -1,0 +1,57 @@
+[{
+  "_id": {
+    "$oid": "67d181351e56b3022aff899e"
+  },
+  "smartplugname": "Real tapo p110",
+  "ipAddress": "192.168.2.119",
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "email": "natchanonr2546@gmail.com",
+  "password": "ball1188",
+  "room": "Livingroom",
+  "type": "TP-Link Tapo P110"
+},
+{
+  "_id": {
+    "$oid": "67d43041f0573ff365058e9b"
+  },
+  "smartplugname": "clone tapo p110 bedroom",
+  "ipAddress": "192.168.2.119",
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "email": "natchanonr2546@gmail.com",
+  "password": "ball1188",
+  "room": "Bedroom",
+  "type": "TP-Link Tapo P110"
+},
+{
+  "_id": {
+    "$oid": "67d983cfe68906c2c957d56a"
+  },
+  "smartplugname": "Clone tapo p110 bathroom",
+  "ipAddress": "192.168.2.119",
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "email": "natchanonr2546@gmail.com",
+  "password": "ball1188",
+  "room": "Bathroom",
+  "type": "TP-Link Tapo P110"
+},
+{
+  "_id": {
+    "$oid": "67da9cdb9b7f2642f9608f27"
+  },
+  "smartplugname": "Clone P110 Kitchen",
+  "ipAddress": "192.168.2.119",
+  "userid": {
+    "$oid": "67c9872419c07e5346722fa2"
+  },
+  "email": "natchanonr2546@gmail.com",
+  "password": "ball1188",
+  "room": "Kitchen",
+  "type": "TP-Link Tapo P110",
+  "__v": 0
+}]
