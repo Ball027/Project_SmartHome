@@ -9,6 +9,7 @@ import math
 import schedule
 import time
 from threading import Thread
+import os
 
 app = Flask(__name__)
 
@@ -363,7 +364,11 @@ def run_scheduler():
     while True:
         schedule.run_pending()
         time.sleep(1)
-
+#deploy
+@app.route('/python-api')
+def hello():
+    return jsonify({"message": "Hello from Flask API!"})
+    
 if __name__ == '__main__':
     #ใช้ทดสอบเนื่องจากไม่สามารถรันapp.pyได้24/7
     schedule_monthly_task()
