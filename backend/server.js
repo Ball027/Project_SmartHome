@@ -55,7 +55,7 @@ app.get('/', (req, res) =>{
   res.send("get connect");
 });
 
-const PORT = 5000
+const PORT = process.env.PORT ||5000
 app.listen(5000, () => {
   console.log(`🚀 Server running o http://localhost:${PORT}`);
 });
