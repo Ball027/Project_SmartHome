@@ -16,9 +16,9 @@ app = Flask(__name__)
 # เชื่อมต่อ MongoDB
 mongo_uri = "mongodb://localhost:27017/SmartHome"
 client = MongoClient(mongo_uri)
-db = client["SmartHome"]  # ชื่อ database
-collection = db["SmartPlugs"]  # ชื่อ collection
-power_records_collection = db["PowerRecords"]  # ชื่อ collection สำหรับบันทึกข้อมูลพลังงานรายเดือน
+db = client["SmartHome"]
+collection = db["SmartPlugs"]
+power_records_collection = db["PowerRecords"]
 
 #ดึงenergy_usage จาก Smartplug
 async def get_energy_data(plugname, _id, plug_type, email, password, ip_address):
@@ -62,11 +62,11 @@ async def get_energy_data(plugname, _id, plug_type, email, password, ip_address)
             "plugname": plugname,
             "_id": str(_id),
             "ip_address": ip_address,
-            "current_power": 0,  # กำหนดค่าเป็น 0
-            "today_energy": 0,  # กำหนดค่าเป็น 0
-            "today_runtime": 0,  # กำหนดค่าเป็น 0
-            "total_energy_month": 0,  # กำหนดค่าเป็น 0
-            "total_runtime_month": 0,  # กำหนดค่าเป็น 0
+            "current_power": 0,  
+            "today_energy": 0,  
+            "today_runtime": 0,  
+            "total_energy_month": 0,  
+            "total_runtime_month": 0,  
             "status": False,
         }
 #ดึงenergy_usageตามห้อง
@@ -93,7 +93,7 @@ def energy(room, userid):
             email = plug.get("email")
             password = plug.get("password")
             ip_address = plug.get("ipAddress")
-            plug_type = plug.get("type")  # ดึงชนิดของ plug
+            plug_type = plug.get("type")
 
             # ตรวจสอบว่าข้อมูลครบถ้วน
             if not all([email, password, ip_address, plug_type]):
@@ -129,10 +129,10 @@ def get_current_power_by_room(userid):
 
         # ตัวแปรเก็บผลลัพธ์
         room_power = {
-            "Livingroom": 0,  # ห้องนั่งเล่น
-            "Bedroom": 0,     # ห้องนอน
-            "Kitchen": 0,      # ห้องครัว
-            "Bathroom": 0,     # ห้องน้ำ
+            "Livingroom": 0,  
+            "Bedroom": 0,     
+            "Kitchen": 0,     
+            "Bathroom": 0,     
         }
 
         # เรียก Tapo API สำหรับทุก Smart Plug
@@ -142,8 +142,8 @@ def get_current_power_by_room(userid):
             email = plug.get("email")
             password = plug.get("password")
             ip_address = plug.get("ipAddress")
-            room = plug.get("room")  # ดึงชื่อห้อง
-            plug_type = plug.get("type")  # ดึงชนิดของ plug
+            room = plug.get("room") 
+            plug_type = plug.get("type")
 
             # ตรวจสอบว่าข้อมูลครบถ้วน
             if not all([email, password, ip_address, plug_type]):
@@ -154,7 +154,7 @@ def get_current_power_by_room(userid):
             energy_data = asyncio.run(get_energy_data(plugname, _id, plug_type, email, password, ip_address))
             current_power = energy_data.get("current_power", 0)
 
-            # เพิ่ม current_power ไปยังห้องที่เกี่ยวข้อง
+            # เพิ่ม current_power ไปยังแต่ละห้อง
             if room in room_power:
                 room_power[room] += current_power
 
@@ -167,7 +167,7 @@ def get_current_power_by_room(userid):
 async def toggle_plug(device_id):
     try:
         data = request.get_json()
-        status = data.get("status")  # "on" หรือ "off"
+        status = data.get("status")  # "on/off"
         print(f"Received status: {status}")
         # ดึงข้อมูล plug จาก MongoDB
         plug = collection.find_one({"_id": ObjectId(device_id)})
@@ -219,8 +219,8 @@ def calculate_electricity_cost(total_units):
 def save_monthly_data():
     print("กำลังบันทึกข้อมูลทุกสิ้นเดือน...")
     try:
-        # ดึงข้อมูลผู้ใช้ทั้งหมดจาก MongoDB (หรือดึงเฉพาะ userid ที่ต้องการ)
-        users = list(db["Users"].find({}, {"_id": 1}))  # สมมติว่ามี collection "Users" สำหรับเก็บข้อมูลผู้ใช้
+        # ดึงข้อมูลuserid
+        users = list(db["Users"].find({}, {"_id": 1}))
 
         if not users:
             print("No users found in database")
@@ -231,7 +231,7 @@ def save_monthly_data():
             userid = user["_id"]
             print(f"กำลังบันทึกข้อมูลสำหรับ userid: {userid}")
 
-            # ดึงข้อมูล Smart Plugs ของผู้ใช้นี้
+            # ดึงข้อมูล Smart Plugs ของผู้ใช้แต่ละคน
             smart_plugs = list(collection.find({"userid": userid}))
 
             if not smart_plugs:
@@ -252,7 +252,7 @@ def save_monthly_data():
             # ตัวแปรเก็บข้อมูลรวม
             total_energy_user = 0  # พลังงานรวมทั้งเดือน (Wh)
             total_runtime_user = 0  # เวลาการทำงานรวมทั้งเดือน (ชั่วโมง)
-            total_units_user = 0  # พลังงานรวมทั้งเดือน (kWh)
+            total_units_user = 0  # ยูนิตไฟ (kWh)
             total_cost = 0  # ค่าไฟรวมทั้งเดือน (บาท)
 
             # พลังงานรวมของแต่ละห้อง
@@ -269,7 +269,7 @@ def save_monthly_data():
                 password = plug.get("password")
                 ip_address = plug.get("ipAddress")
                 room = plug.get("room")
-                plug_type = plug.get("type")  # ดึงชนิดของ plug
+                plug_type = plug.get("type")
 
                 # ตรวจสอบว่าข้อมูลครบถ้วน
                 if not all([email, password, ip_address, plug_type]):
@@ -318,7 +318,7 @@ def save_monthly_data():
                     "date": current_month_year,  # รูปแบบเดือน/ปี
                     "total_energy_month": energy_wh,
                     "total_runtime_month": runtime_hours,
-                    "units": round(units, 2),  # ปัดเศษ units ให้เหลือทศนิยม 2 ตำแหน่ง
+                    "units": round(units, 2),
                 })
 
             # คำนวณค่าไฟ
@@ -330,7 +330,7 @@ def save_monthly_data():
                 "month/year": current_month_year,  # รูปแบบเดือน/ปี
                 "total_energy": total_energy_user,  # พลังงานรวมทั้งเดือน (Wh)
                 "total_runtime": total_runtime_user,  # เวลาการทำงานรวมทั้งเดือน (ชั่วโมง)
-                "total_units": round(total_units_user, 2),  # พลังงานรวมทั้งเดือน (kWh)
+                "total_units": round(total_units_user, 2),  # ยูนิตทั้งเดือน (kWh)
                 "total_cost": round(total_cost, 2),  # ค่าไฟรวมทั้งเดือน (บาท)
                 "livingroom_energy": livingroom_energy,  # พลังงานรวมของห้อง Living Room (Wh)
                 "bedroom_energy": bedroom_energy,  # พลังงานรวมของห้อง Bedroom (Wh)

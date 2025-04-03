@@ -1,13 +1,9 @@
 <template>
   <div class="room-container">
-    <!-- Sidebar -->
     <Sidebar />
-
-    <!-- Main Content -->
     <main class="content">
       <h1 class="title">{{ RoomName }}</h1>
       <button @click="openModal" class="add-device-btn">เพิ่มอุปกรณ์ +</button>
-
       <!-- Modal เพิ่มอุปกรณ์ -->
       <div v-if="showModal" class="modal-overlay">
         <div class="modal">
@@ -20,8 +16,6 @@
             <input type="email" placeholder="อีเมล บน Tapo App" v-model="email" required />
             <input type="password" placeholder="รหัสผ่าน" v-model="password" required />
             <input type="text" placeholder="IP Address SmartPlug" v-model="ipAddress" required />
-
-            <!-- เพิ่ม Dropdown สำหรับเลือกชนิดของ plug -->
             <select v-model="selectedPlugType" required>
               <option value="" disabled>เลือกชนิดของ Plug</option>
               <option value="TP-Link Tapo P110">TP-Link Tapo P110</option>
@@ -66,7 +60,7 @@ export default {
       password: "",
       ipAddress: "",
       smartplugname: "",
-      selectedPlugType: "", // เพิ่ม property นี้
+      selectedPlugType: "",
       interval: null,
       roomMapping:{
         "Livingroom": "ห้องนั่งเล่น",
@@ -136,7 +130,7 @@ export default {
           password: this.password,
           ipAddress: this.ipAddress,
           smartplugname: this.smartplugname,
-          type: this.selectedPlugType, // ส่งชนิดของ Plug ไปยัง API
+          type: this.selectedPlugType,
         });
         this.devices.push(response.data);
         this.closeModal();
@@ -189,7 +183,6 @@ export default {
 </script>
 
 <style scoped>
-/* CSS styles */
 .room-container {
   display: flex;
   height: 100vh;

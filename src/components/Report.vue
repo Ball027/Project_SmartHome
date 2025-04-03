@@ -3,7 +3,6 @@
     <Sidebar />
     <div class="report-container">
       <h2 class="report-title">รายงานค่าใช้จ่ายที่เกิดขึ้น</h2>
-
       <!-- Dropdown เลือกปี -->
       <div class="filter-container">
         <label for="year">ระบุปีที่ต้องการ</label>
@@ -224,15 +223,15 @@ export default {
 }
 
 .high-energy-font {
-  color: red; /* สีแดง */
+  color: red; 
 }
 
 .medium-energy-font {
-  color: orange; /* สีเหลือง */
+  color: orange; 
 }
 
 .low-energy-font {
-  color: green; /* สีเขียว */
+  color: green; 
 }
 
 .room-name {
@@ -244,6 +243,6 @@ export default {
 
 .room-energy {
   font-size: 1.1rem;
-  font-weight: bold; /* ทำให้ตัวเลขเด่นขึ้น */
+  font-weight: bold;
 }
 </style>

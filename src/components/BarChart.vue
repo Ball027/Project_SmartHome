@@ -20,7 +20,6 @@ export default {
     this.renderChart();
   },
   watch: {
-    // ตรวจจับการเปลี่ยนแปลงของ chartData
     chartData: {
       handler() {
         if (this.chart) {
@@ -28,7 +27,7 @@ export default {
         }
         this.renderChart(); // สร้างกราฟใหม่
       },
-      deep: true, // ตรวจจับการเปลี่ยนแปลงใน object อย่างลึก
+      deep: true,
     },
   },
   methods: {

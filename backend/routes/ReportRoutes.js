@@ -2,14 +2,14 @@ const express = require("express");
 const router = express.Router();
 const { MongoClient } = require("mongodb");
 
-// เชื่อมต่อ MongoDB
+
 const mongoUri = "mongodb://localhost:27017/SmartHome";
 const client = new MongoClient(mongoUri);
 
 // ดึงข้อมูลรายงานสำหรับปีที่เลือก
 router.get("/api/reports/", async (req, res) => {
     try {
-      const year = req.query.year; // รับปีจาก query parameter
+      const year = req.query.year; 
       if (!year) {
         return res.status(400).json({ message: "Year is required" });
       }
@@ -26,7 +26,7 @@ router.get("/api/reports/", async (req, res) => {
         return res.status(404).json({ message: "No reports found for this year" });
       }
   
-      // แปลงข้อมูลให้อยู่ในรูปแบบที่ Vue.js ต้องการ
+      
       const result = reports.map(report => ({
         "month/year": report["month/year"],
         "total_energy": report["total_energy"],
@@ -69,7 +69,7 @@ router.get("/api/reports/years", async (req, res) => {
         }
       ]).toArray();
   
-      // แปลงผลลัพธ์ให้เป็น array ของปี
+      
       const yearList = years.map(item => item._id);
   
       res.json(yearList);

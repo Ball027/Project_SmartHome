@@ -10,7 +10,6 @@
         <li><router-link to="/room/Kitchen">ห้องครัว</router-link></li>
         <li><router-link to="/room/Bathroom">ห้องอาบน้ำ</router-link></li>
         <li><router-link to="/report">รายงานค่าใช้จ่าย</router-link></li>
-        <!-- <li><router-link to="/notification">แจ้งเตือน</router-link></li> -->
       </ul>
     </nav>
     <button class="logout-btn" @click="logout">ออกระบบ</button>
@@ -36,7 +35,6 @@ export default {
     },
   },
   async created() {
-    // ดึงข้อมูลผู้ใช้งานเมื่อ component ถูกสร้าง
     await this.fetchUserData();
   },
   methods: {
@@ -50,7 +48,7 @@ export default {
         // เก็บ Token ลงใน localStorage
         localStorage.setItem('token', response.data.token);
 
-        // ส่งผู้ใช้ไปยังหน้า Dashboard หรือหน้าอื่น ๆ
+        // ส่งผู้ใช้ไปยังหน้า Dashboard
         this.$router.push('/dashboard');
       } catch (error) {
         console.error('Login failed:', error.response?.data || error.message);
@@ -90,7 +88,6 @@ html {
   width: 250px;
   height: 100vh;
   background-color: #0057d9;
-  /* สีฟ้าน้ำเงิน */
   color: white;
   display: flex;
   flex-direction: column;

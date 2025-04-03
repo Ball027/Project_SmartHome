@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const axios = require('axios');
-const Smartplug = require("../models/SmartPlug"); // สมมติว่าคุณมีโมเดล Smartplug
+const Smartplug = require("../models/SmartPlug");
+
 // เพิ่ม Smartplug
 router.post("/api/addsmartplugs", async (req, res) => {
   const { room, userid, email, password, ipAddress, smartplugname, type } = req.body;
@@ -44,7 +45,7 @@ router.delete("/api/deleteplug/:device_id", async (req, res) => {
 router.put("/api/toggle-plug/:device_id", async (req, res) => {
   try {
     const deviceId = req.params.device_id;
-    const { status } = req.body; // status: "on" หรือ "off"
+    const { status } = req.body; // status: "on/off"
 
     // ส่ง request ไปยัง app.py
     const response = await axios.put(

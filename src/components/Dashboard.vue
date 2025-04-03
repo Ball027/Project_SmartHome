@@ -1,10 +1,7 @@
 <template>
   <div class="dashboard-container">
-    <!-- เรียกใช้ Sidebar -->
     <Sidebar />
-    <!-- ส่วนเนื้อหาหลัก -->
     <div class="content">
-      <!-- แสดง currentPower ของทั้ง 4 ห้อง -->
       <div class="power-grid">
         <div class="power-card">
           <span class="power-label">ห้องนั่งเล่น</span>
@@ -38,10 +35,10 @@ export default {
   data() {
     return {
       roomPowers: {
-        Livingroom: 0,  // ห้องนั่งเล่น
-        Bedroom: 0,     // ห้องนอน
-        Kitchen: 0,     // ห้องครัว
-        Bathroom: 0,    // ห้องน้ำ
+        Livingroom: 0,
+        Bedroom: 0,    
+        Kitchen: 0,     
+        Bathroom: 0,    
       },
       userid: localStorage.getItem("userid"),
       interval: null,

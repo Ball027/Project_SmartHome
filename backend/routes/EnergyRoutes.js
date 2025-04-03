@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const axios = require('axios');
 
+// Route สำหรับดึง Smartplug ของห้อง
 router.get('/api/energy/:room/:userid', async (req, res) => {
   try {
     const { room, userid } = req.params;  // ดึง room และ userid จาก path parameters
